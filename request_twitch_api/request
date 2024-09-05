@@ -1,0 +1,8 @@
+Получить список вещателей:
+Требуется токен доступа пользователя, который включает область user:read:follows.
+GET https://api.twitch.tv/helix/streams/followed
+Пример:
+curl -X GET 'https://api.twitch.tv/helix/streams/followed?user_id=141981764' \
+-H 'Authorization: Bearer 2gbdx6oar67tqtcmt49t3wpcgycthx' \
+-H 'Client-Id: wbmytr93xzw8zbg0p1izqyzzc5mbiz'
+
