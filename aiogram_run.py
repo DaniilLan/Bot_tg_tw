@@ -7,7 +7,7 @@ from keyboards.keyboard_all import *
 
 
 async def set_commands():
-    commands = [BotCommand(command='start', description='Частые вопросы')]
+    commands = [BotCommand(command='start', description='Начало')]
     await bot.set_my_commands(commands, BotCommandScopeDefault())
 
 

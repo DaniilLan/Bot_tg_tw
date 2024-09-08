@@ -52,13 +52,9 @@ def get_followed(name):
             else:
                 list_online[streamer['displayName']] = '⚫'
 
-        # Сортируем имена стримеров по алфавиту
         sorted_streamers = dict(sorted(list_online.items(), key=lambda item: item[1]))
 
-        return sorted_streamers  # Возвращаем отсортированный словарь
+        return sorted_streamers
     else:
         print(f"Ошибка: {response.status_code} - {response.text}")
         return None
-
-
-get_user_id('myrzen_u')
