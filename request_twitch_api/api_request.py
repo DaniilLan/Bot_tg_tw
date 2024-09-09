@@ -58,3 +58,5 @@ def get_followed(name):
     else:
         print(f"Ошибка: {response.status_code} - {response.text}")
         return None
+
+
