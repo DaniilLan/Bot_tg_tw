@@ -23,14 +23,8 @@ async def cmd_start(event: Message | CallbackQuery):
     if isinstance(event, CallbackQuery):
         await event.answer()
         message = event.message
-        user_id = event.from_user.id
-        user_login = event.from_user.username
     elif isinstance(event, Message):
         message = event
-        user_id = message.from_user.id
-        user_login = event.from_user.username
-    print(user_login)
-    print(user_id)
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         keyboard_button_random_followers(),
         keyboard_button_check_streamers()

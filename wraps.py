@@ -6,7 +6,10 @@ from functools import wraps
 async def check_user(event, user_id=None):
     db_user = UserDatabase(db_name="db_handler/tg_auth.db")
     user_id = event.from_user.id
+    user_login = event.from_user.username
     tg_user = db_user.get_user(user_id)
+    print(user_login)
+    print(user_id)
     if tg_user is None:
         if isinstance(event, Message):
             await event.answer("В доступе отказано.")
