@@ -13,6 +13,13 @@ user_messages = {}
 user_action = {}
 
 
+@start_router.callback_query()
+async def router(event: Message | CallbackQuery):
+    await event.answer()
+    user_id = event.from_user.id
+    print(user_id)
+
+
 @start_router.message(CommandStart())
 @start_router.callback_query(F.data == "back_to_start")
 async def cmd_start(event: Message | CallbackQuery):
@@ -119,7 +126,7 @@ async def handle_message(message: Message):
                 return await message.answer("На данный момент сервис поиска стримеров перегружен.\n"
                                             "Попробуй другие функции бота или подожди пока все оживет ;)",
                                             reply_markup=keyboard)
-            if followed_streamers:
+            if followed_streamers is not None:
                 keyboard = InlineKeyboardMarkup(inline_keyboard=[
                     keyboard_button_list_streamers(status, name)
                     for name, status in followed_streamers.items()
@@ -143,7 +150,7 @@ async def handle_message(message: Message):
                 return await message.answer("На данный момент сервис перегружен.\n"
                                             "Попробуй другие функции бота или подожди пока все оживет ;)",
                                             reply_markup=keyboard)
-            if followed_streamers:
+            if followed_streamers is not None:
                 keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_re_roll_follow(),
                                                                  keyboards_button_bac_to_start()])
                 async with ChatActionSender(bot=bot, chat_id=user_id, action="typing"):
