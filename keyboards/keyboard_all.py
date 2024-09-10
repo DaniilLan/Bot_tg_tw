@@ -12,7 +12,7 @@ def keyboard_button_check_streamers():
 
 
 def keyboard_button_list_streamers(status, name):
-    keyboard = [InlineKeyboardButton(text=f"{status}: {name}", callback_data=f"streamer_{name}")]
+    keyboard = [InlineKeyboardButton(text=f"{status} {name}", callback_data=f"streamer_{name}")]
     return keyboard
 
 

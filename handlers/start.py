@@ -13,13 +13,6 @@ user_messages = {}
 user_action = {}
 
 
-@start_router.callback_query()
-async def router(event: Message | CallbackQuery):
-    await event.answer()
-    user_id = event.from_user.id
-    print(user_id)
-
-
 @start_router.message(CommandStart())
 @start_router.callback_query(F.data == "back_to_start")
 async def cmd_start(event: Message | CallbackQuery):
