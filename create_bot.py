@@ -10,7 +10,3 @@ logger = logging.getLogger(__name__)
 
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher(storage=MemoryStorage())
-
-questions = {
-    1: {'qst': 'Узнать кто сейчас онлайн - 🔴'}
-}

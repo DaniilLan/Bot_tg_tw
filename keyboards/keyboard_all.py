@@ -36,3 +36,7 @@ def keyboard_button_write_nickname():
     return keyboards
 
 
+def keyboard_button_re_roll_follow():
+    keyboards = [InlineKeyboardButton(text="Перевыбрать", callback_data="re_roll_follow")]
+    return keyboards
+
