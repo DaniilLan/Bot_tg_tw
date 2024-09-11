@@ -32,7 +32,7 @@ def get_random_follower(name):
             if not cursor:
                 break
         else:
-            return f"Error: {response.status_code}"
+            return f"{response.status_code} - {response.text}"
     if user_names:
         return random.choice(user_names)
     else:
@@ -56,5 +56,39 @@ def get_followed(name):
 
         return sorted_streamers
     else:
-        print(f"Ошибка: {response.status_code} - {response.text}")
+        print(f"{response.status_code} - {response.text}")
         return None
+
+
+def get_user_pf(name):
+    url = f'https://api.twitch.tv/helix/users?login={name}'
+    headers = {
+        'Authorization': 'Bearer 2eawmkloujpadta8wjp0qaiyihggjb',
+        'Client-Id': 'gp762nuuoqcoxypju8c569th9wz7q5'
+    }
+    response = requests.get(url, headers=headers).json()
+
+    return response['data'][0]['profile_image_url']
+
+
+def get_info_channel(name):
+    user_id = get_user_id(name)
+    url = f'https://api.twitch.tv/helix/channels?broadcaster_id={user_id}'
+    headers = {
+        'Authorization': 'Bearer 2eawmkloujpadta8wjp0qaiyihggjb',
+        'Client-Id': 'gp762nuuoqcoxypju8c569th9wz7q5'
+    }
+    response = requests.get(url, headers=headers)
+    list_info = {}
+    if response.status_code == 200:
+        response = response.json()
+        return response['data']
+    else:
+        print(f"{response.status_code} - {response.text}")
+        return None
+
+
+print(get_user_pf('tabula_russia'))
+print(get_info_channel('tabula_russia'))
+print(get_info_channel('ilame'))
+print(get_info_channel('MILANRODD'))

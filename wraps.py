@@ -26,6 +26,6 @@ def user_permission_required(func):
     async def wrapper(event, *args, **kwargs):
         permission = await check_user(event)
         if not permission:
-            return  # Если пользователь не авторизован, завершаем выполнение функции
+            return
         return await func(event, *args, **kwargs)
     return wrapper

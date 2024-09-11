@@ -22,7 +22,7 @@ def keyboards_button_bac_to_start():
 
 
 def keyboards_button_bac_to_streamers():
-    keyboards = [InlineKeyboardButton(text="Стримеры", callback_data="back_to_streamers")]
+    keyboards = [InlineKeyboardButton(text="Другие стримеры", callback_data="back_to_streamers")]
     return keyboards
 
 
@@ -38,5 +38,10 @@ def keyboard_button_write_nickname():
 
 def keyboard_button_re_roll_follow():
     keyboards = [InlineKeyboardButton(text="Перевыбрать", callback_data="re_roll_follow")]
+    return keyboards
+
+
+def keyboard_button_open_channel(name):
+    keyboards = [InlineKeyboardButton(text="Канал на Twitch", callback_data="open_channel", url=f'https://www.twitch.tv/{name}')]
     return keyboards
 
