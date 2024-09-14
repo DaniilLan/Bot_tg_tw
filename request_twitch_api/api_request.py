@@ -9,7 +9,6 @@ def get_user_id(name):
         'Client-Id': 'gp762nuuoqcoxypju8c569th9wz7q5'
     }
     response = requests.get(url, headers=headers).json()
-
     return response['data'][0]['id']
 
 
@@ -42,22 +41,24 @@ def get_random_follower(name):
 def get_followed(name):
     url = f'https://tools.2807.eu/api/getfollows/{name}'
     response = requests.get(url)
-
     if response.status_code == 200:
         data = response.json()
-        list_online = {}
-        for streamer in data:
-            if streamer['isLive']:
-                list_online[streamer['displayName']] = '🔴'
-            else:
-                list_online[streamer['displayName']] = '⚫'
+        if isinstance(data, list):
+            list_online = {}
+            for streamer in data:
+                if streamer['isLive']:
+                    list_online[streamer['displayName']] = '🔴'
+                else:
+                    list_online[streamer['displayName']] = '⚫️'
 
-        sorted_streamers = dict(sorted(list_online.items(), key=lambda item: item[1]))
+            sorted_streamers = dict(sorted(list_online.items(), key=lambda item: item[1]))
 
-        return sorted_streamers
+            return sorted_streamers
+        else:
+            return False
     else:
         print(f"{response.status_code} - {response.text}")
-        return None
+        return False
 
 
 def get_user_pf(name):
@@ -79,7 +80,6 @@ def get_info_channel(name):
         'Client-Id': 'gp762nuuoqcoxypju8c569th9wz7q5'
     }
     response = requests.get(url, headers=headers)
-    list_info = {}
     if response.status_code == 200:
         response = response.json()
         return response['data']
@@ -88,7 +88,4 @@ def get_info_channel(name):
         return None
 
 
-print(get_user_pf('tabula_russia'))
-print(get_info_channel('tabula_russia'))
-print(get_info_channel('ilame'))
-print(get_info_channel('MILANRODD'))
+print(get_info_channel('myrzen_u'))

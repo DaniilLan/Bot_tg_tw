@@ -12,7 +12,7 @@ def keyboard_button_check_streamers():
 
 
 def keyboard_button_list_streamers(status, name):
-    keyboard = [InlineKeyboardButton(text=f"{status} {name}", callback_data=f"streamer_{name}")]
+    keyboard = [InlineKeyboardButton(text=f"{status} {name}", callback_data=f"streamer_{name}_{status}")]
     return keyboard
 
 
@@ -45,3 +45,7 @@ def keyboard_button_open_channel(name):
     keyboards = [InlineKeyboardButton(text="Канал на Twitch", callback_data="open_channel", url=f'https://www.twitch.tv/{name}')]
     return keyboards
 
+
+def keyboard_button_request_permission():
+    keyboards = [InlineKeyboardButton(text="Запросить доступ", callback_data="request_permission")]
+    return keyboards

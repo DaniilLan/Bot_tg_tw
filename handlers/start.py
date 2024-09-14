@@ -1,3 +1,4 @@
+import re
 from aiogram import Router, F
 from aiogram.filters import CommandStart
 from aiogram.types import InputMediaPhoto
@@ -9,7 +10,8 @@ from requests.exceptions import ConnectionError
 from db_handler.db_class import *
 from functools import wraps
 from wraps import *
-
+from config import languages_flags
+from db_handler.db_class import UserDatabase
 
 start_router = Router()
 user_nickname = {}
@@ -39,6 +41,23 @@ async def cmd_start(event: Message | CallbackQuery):
         await message.edit_text(text_command, reply_markup=keyboard)
 
 
+@start_router.callback_query(F.data == "request_permission")
+async def handle_request_permission(event: CallbackQuery):
+    await event.answer()
+    db_user = UserDatabase(db_name="db_handler/tg_auth.db")
+    user_id = event.from_user.id
+    user_login = event.from_user.username
+    check_add = db_user.add_record(user_id, user_login, "request_permission")
+    db_user.close()
+    if check_add is False:
+        await event.message.edit_text("Запрос на предоставление доступа был отправлен!\n"
+                                      "Ждите результата обработки.\n"
+                                      "Обработка может занять до 24ч⏳")
+    else:
+        await event.message.edit_text("Что-то пошло не так!")
+    db_user.close()
+
+
 @start_router.callback_query(F.data == "write_nickname")
 @user_permission_required
 async def handle_wait_write_nickname(event: CallbackQuery):
@@ -51,17 +70,38 @@ async def handle_wait_write_nickname(event: CallbackQuery):
 @user_permission_required
 async def handle_streamer_click(event: CallbackQuery):
     await event.answer()
-    streamer_name = event.data.replace('streamer_', '')
+    match = re.match(r'^streamer_(.+?)_(🔴|⚫️)$', event.data)
+    print(match)
+    if not match:
+        await event.answer("Некорректные данные", show_alert=True)
+        return
+
+    streamer_name = match.group(1)
+    life_status = match.group(2)
+    info_streamer = get_info_channel(streamer_name)[0]
     keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_open_channel(streamer_name),
                                                      keyboards_button_bac_to_streamers()])
     await event.message.delete()
-    text = (f"Описание для стримера {streamer_name} в процессе. (пока ток фотку заливает)\n"
-            f"")
+    lang_tag = info_streamer['broadcaster_language']
+    flag = languages_flags.get(lang_tag, '')
+    text = (f"Описание для стримера <b>{streamer_name}{life_status}</b>\n"
+            f"\n"
+            f"👅 <b>Язык трансляции: {flag}\n"
+            f"\n"
+            f"🎮 Категория {'текущей' if life_status == '🔴' else 'прошлой'} трансляции: {info_streamer['game_name']}\n"
+            f"\n"
+            f"📝 Описание {'текущей' if life_status == '🔴' else 'прошлой'} трансляции: {info_streamer['title']}\n"
+            f"\n"
+            f"⁉️ Теги {'текущей' if life_status == '🔴' else 'прошлой'} трансляции: {'➕'.join(info_streamer['tags'])}\n"
+            f"\n"
+            f"⚠️ Стрим {'c' if info_streamer['content_classification_labels'] != '' else 'без'} возрастным ограничением!</b>")
+
     await bot.send_photo(
         chat_id=event.message.chat.id,
         photo=get_user_pf(streamer_name),
         reply_markup=keyboard,
-        caption=text
+        caption=text,
+        parse_mode='HTML'
     )
 
 
@@ -84,21 +124,22 @@ async def handle_back_to_streamers(event: CallbackQuery):
                 await event.message.delete()
                 await event.message.answer("Вот твои стримеры:", reply_markup=keyboard)
         else:
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[[keyboard_button_re_write_nickname()],
+                                                             [keyboards_button_bac_to_start()]])
             if event.message.content_type == 'text':
-                await event.message.edit_text("Список стримеров пуст.")
+                await event.message.edit_text("Список стримеров пуст.", reply_markup=keyboard)
             else:
                 await event.message.delete()
-                await event.message.answer("Список стримеров пуст.")
+                await event.message.answer("Список стримеров пуст.", reply_markup=keyboard)
     else:
         keyboards = InlineKeyboardMarkup(inline_keyboard=[
-            keyboard_button_write_nickname(),
             keyboards_button_bac_to_start()
         ])
         if event.message.content_type == 'text':
-            await event.message.edit_text("Никнейм не найден, введите его снова.", reply_markup=keyboards)
+            await event.message.edit_text("Никнейм не найден.", reply_markup=keyboards)
         else:
             await event.message.delete()
-            await event.message.answer("Никнейм не найден, введите его снова.", reply_markup=keyboards)
+            await event.message.answer("Никнейм не найден.", reply_markup=keyboards)
 
 
 @start_router.callback_query(F.data == "check_streamers")
@@ -146,7 +187,7 @@ async def handle_message(event: Message):
                 return await event.answer("На данный момент сервис поиска стримеров перегружен.\n"
                                           "Попробуй другие функции бота или подожди пока все оживет ;)",
                                           reply_markup=keyboard)
-            if followed_streamers is not None:
+            if followed_streamers:
                 keyboard = InlineKeyboardMarkup(inline_keyboard=[
                                                                     keyboard_button_list_streamers(status, name)
                                                                     for name, status in followed_streamers.items()
@@ -169,7 +210,7 @@ async def handle_message(event: Message):
                 return await event.answer("На данный момент сервис перегружен.\n"
                                           "Попробуй другие функции бота или подожди пока все оживет ;)",
                                           reply_markup=keyboard)
-            if followed_streamers is not None:
+            if followed_streamers:
                 keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_re_roll_follow(),
                                                                  keyboards_button_bac_to_start()])
                 async with ChatActionSender(bot=bot, chat_id=user_id, action="typing"):
