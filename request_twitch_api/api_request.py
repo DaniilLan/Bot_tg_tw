@@ -76,7 +76,7 @@ def get_user_pf(name):
     return response['data'][0]['profile_image_url']
 
 
-async def check_streamer_life(name='iLame'):
+async def check_streamer_life(id_tg, name):
     url = f'https://api.twitch.tv/helix/streams?user_login={name}'
     headers = {
         'Authorization': 'Bearer 2eawmkloujpadta8wjp0qaiyihggjb',
@@ -98,13 +98,13 @@ async def check_streamer_life(name='iLame'):
                             f"<b>🎮 Категория текущей трансляции:</b> {streamer_info['game_name']}\n"
                             f"\n"
                             f"<b>📝 Описание текущей трансляции:</b> {streamer_info['title']}")
-                    await bot.send_message(1022548979, text=text, parse_mode='HTML')
+                    await bot.send_message(id_tg, text=text, parse_mode='HTML')
             else:
                 if status:
                     status = False
-                    await bot.send_message(1022548979, f"⚫️ Стример <b>{name}</b> завершил трансляцию.", parse_mode='HTML')
+                    await bot.send_message(id_tg, f"⚫️ Стример <b>{name}</b> завершил трансляцию.", parse_mode='HTML')
         except requests.exceptions.RequestException as e:
-            await bot.send_message(1022548979, f"Ошибка соединения с Twitch API: {e}")
+            await bot.send_message(id_tg, f"Ошибка соединения с Twitch API: {e}")
         await asyncio.sleep(5)
 
 

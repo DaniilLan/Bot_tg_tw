@@ -42,7 +42,8 @@ def keyboard_button_re_roll_follow():
 
 
 def keyboard_button_open_channel(name):
-    keyboards = [InlineKeyboardButton(text="Канал на Twitch", callback_data="open_channel", url=f'https://www.twitch.tv/{name}')]
+    keyboards = [
+        InlineKeyboardButton(text="Канал на Twitch", callback_data="open_channel", url=f'https://www.twitch.tv/{name}')]
     return keyboards
 
 
@@ -55,3 +56,7 @@ def keyboard_button_notif_stream():
     keyboards = [InlineKeyboardButton(text="Уведомления о трансляции", callback_data="notif_stream")]
     return keyboards
 
+
+def keyboard_button_add_notif():
+    keyboards = [InlineKeyboardButton(text="Добавить стримера", callback_data="add_notif_stream")]
+    return keyboards

@@ -25,6 +25,11 @@ user_action = {}
 @start_router.callback_query(F.data == "back_to_start")
 @user_permission_required
 async def cmd_start(event: Message | CallbackQuery):
+    db_user = UserDatabase(db_name="db_handler/tg_auth.db")
+    id_user = event.from_user.id
+    streamers = db_user.get_name_streamers(id_user)
+    for i in streamers:
+        asyncio.create_task(check_streamer_life(id_user, i[0]))
     message = None
     if isinstance(event, CallbackQuery):
         await event.answer()
@@ -44,11 +49,23 @@ async def cmd_start(event: Message | CallbackQuery):
         await message.edit_text(text_command, reply_markup=keyboard)
 
 
-# @start_router.callback_query(F.data == "notif_stream")
-# async def handle_request_permission(event: CallbackQuery):
-#     await event.answer()
-#     db_user = UserDatabase(db_name="db_handler/tg_auth.db")
-#     my_streamers = db_user.
+@start_router.callback_query(F.data == "notif_stream")
+async def handle_request_permission(event: CallbackQuery):
+    await event.answer()
+    db_user = UserDatabase(db_name="db_handler/tg_auth.db")
+    id_user = event.from_user.id
+    my_streamers = db_user.get_name_streamers(id_user=id_user)
+
+    # Извлекаем имена стримеров из кортежей
+    my_streamers = [streamer[0] for streamer in my_streamers]
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_add_notif(),
+                                                     keyboards_button_bac_to_start()])
+    await event.message.edit_text(f'🔔\n'
+                                  f'<b>Ты будешь получать уведомления о начале трансляции стримера(ов):</b>\n\n'
+                                  f'<b>➡️ {"\n➡️ ".join(my_streamers)}</b>', reply_markup=keyboard, parse_mode="HTML")
+    db_user.close()
+
 
 
 @start_router.callback_query(F.data == "request_permission")
@@ -77,6 +94,14 @@ async def handle_wait_write_nickname(event: CallbackQuery):
     user_nickname[event.from_user.id] = True
 
 
+@start_router.callback_query(F.data == "add_notif_stream")
+@user_permission_required
+async def handle_wait_write_nickname(event: CallbackQuery):
+    await event.answer()
+    await event.message.edit_text("Жду ник-нейм стримера на твиче ⏳")
+    user_nickname[event.from_user.id] = True
+
+
 @start_router.callback_query(F.data.startswith('streamer_'))
 @user_permission_required
 async def handle_streamer_click(event: CallbackQuery):
@@ -97,7 +122,7 @@ async def handle_streamer_click(event: CallbackQuery):
     flag = languages_flags.get(lang_tag, '')
     text = (f"{life_status} Описание трансляции стримера <b>{streamer_name}</b>\n"
             f"\n"
-            f"{f'👁 <b>Количество зрителей: {info_streamer['viewer_count']}\n\n</b>'if life_status == '🔴' else ''}"
+            f"{f'👁 <b>Количество зрителей: {info_streamer['viewer_count']}\n\n</b>' if life_status == '🔴' else ''}"
             f"👅 <b>Язык трансляции: {flag}\n"
             f"\n"
             f"🎮 Категория {'текущей' if life_status == '🔴' else 'прошлой'} трансляции: {info_streamer['game_name']}\n"

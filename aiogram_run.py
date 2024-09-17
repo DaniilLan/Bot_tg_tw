@@ -14,7 +14,6 @@ async def set_commands():
 
 async def start_bot():
     await set_commands()
-    asyncio.create_task(check_streamer_life())
 
 
 async def main():

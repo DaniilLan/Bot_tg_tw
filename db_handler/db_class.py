@@ -57,7 +57,19 @@ class UserDatabase:
         ''', (id_user,))
         return self.cursor.fetchone()
 
-    def get_all_users(self, table_name):
+    def get_streamers(self, id_user):
+        self.cursor.execute('''
+        SELECT * FROM notif_stream WHERE tg_id_user = ?
+        ''', (id_user,))
+        return self.cursor.fetchone()
+
+    def get_name_streamers(self, id_user):
+        self.cursor.execute('''
+        SELECT name_streamer FROM notif_stream WHERE tg_id_user = ?
+        ''', (id_user,))
+        return self.cursor.fetchall()
+
+    def get_all(self, table_name):
         self.cursor.execute(f'SELECT * FROM {table_name}')
         return self.cursor.fetchall()
 
@@ -96,7 +108,7 @@ class UserDatabase:
             return False
 
     def add_user_for_notif(self, tg_id_user, name_streamer):
-        sql = '''INSERT INTO natif_stream (tg_id_user, name_streamer) 
+        sql = '''INSERT INTO notif_stream (tg_id_user, name_streamer) 
                  VALUES (?, ?)'''
         try:
             self.cursor.execute(sql, (tg_id_user, name_streamer))
@@ -114,7 +126,8 @@ if __name__ == '__main__':
 
     while True:
         command = input("Введите команду (add, delete, update, get, get_all, "
-                        "exit, create_table, drop_table, add_permission): ")
+                        "exit, create_table, drop_table, add_permission"
+                        "get_streamers, add_for_notif, full_request, get_name_streamer): ")
 
         if command == 'add':
             table_name = input("Введите название таблицы: ")
@@ -147,7 +160,7 @@ if __name__ == '__main__':
 
         elif command == 'get_all':
             table_name = input('Введите название таблицы: ')
-            users = db.get_all_users(table_name)
+            users = db.get_all(table_name)
             for user in users:
                 print(user)
 
@@ -178,13 +191,21 @@ if __name__ == '__main__':
 
         elif command == "full_request":
             request = input('Введите запрос: ')
-            db.full_request(request)
+            print(db.full_request(request))
 
         elif command == "add_for_notif":
             tg_id_user = int(input("Введите tg_id_user: "))
             name_streamer = (input("Введите name_streamer: "))
             db.add_user_for_notif(tg_id_user, name_streamer)
 
+        elif command == "get_streamers":
+            tg_id_user = input("Введите id_tg_user (или all для вывода всех): ")
+            print(db.get_streamers(tg_id_user))
+
+        elif command == "get_name_streamer":
+            tg_id_user = input("Введите id_tg_user: ")
+            print(db.get_name_streamers(tg_id_user))
+
+
         else:
             print("Неверная команда. Пожалуйста, попробуйте снова.")
-
