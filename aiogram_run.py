@@ -1,6 +1,7 @@
 import asyncio
 from create_bot import bot, dp
 from handlers.start import start_router
+from request_twitch_api.api_request import check_streamer_life
 # from work_time.time_func import send_time_msg
 from aiogram.types import BotCommand, BotCommandScopeDefault
 from keyboards.keyboard_all import *
@@ -13,6 +14,7 @@ async def set_commands():
 
 async def start_bot():
     await set_commands()
+    asyncio.create_task(check_streamer_life())
 
 
 async def main():

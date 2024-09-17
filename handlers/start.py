@@ -1,5 +1,7 @@
+import asyncio
 import re
 from aiogram import Router, F
+from aiogram.dispatcher import router
 from aiogram.filters import CommandStart
 from aiogram.types import InputMediaPhoto
 from aiogram.utils.chat_action import ChatActionSender
@@ -31,7 +33,8 @@ async def cmd_start(event: Message | CallbackQuery):
         message = event
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         keyboard_button_random_followers(),
-        keyboard_button_check_streamers()
+        keyboard_button_check_streamers(),
+        keyboard_button_notif_stream()
     ])
     text_command = ('Приветствую!\n'
                     'Ниже весь доступный функционал бота!')
@@ -41,6 +44,13 @@ async def cmd_start(event: Message | CallbackQuery):
         await message.edit_text(text_command, reply_markup=keyboard)
 
 
+# @start_router.callback_query(F.data == "notif_stream")
+# async def handle_request_permission(event: CallbackQuery):
+#     await event.answer()
+#     db_user = UserDatabase(db_name="db_handler/tg_auth.db")
+#     my_streamers = db_user.
+
+
 @start_router.callback_query(F.data == "request_permission")
 async def handle_request_permission(event: CallbackQuery):
     await event.answer()
@@ -48,13 +58,14 @@ async def handle_request_permission(event: CallbackQuery):
     user_id = event.from_user.id
     user_login = event.from_user.username
     check_add = db_user.add_record(user_id, user_login, "request_permission")
-    db_user.close()
     if check_add is False:
-        await event.message.edit_text("Запрос на предоставление доступа был отправлен!\n"
+        await event.message.edit_text("Запрос на предоставление доступа уже был отправлен!\n"
                                       "Ждите результата обработки.\n"
                                       "Обработка может занять до 24ч⏳")
     else:
-        await event.message.edit_text("Что-то пошло не так!")
+        await event.message.edit_text("Запрос на предоставление доступа был отправлен!\n"
+                                      "Ждите результата обработки.\n"
+                                      "Обработка может занять до 24ч⏳")
     db_user.close()
 
 
@@ -78,14 +89,15 @@ async def handle_streamer_click(event: CallbackQuery):
 
     streamer_name = match.group(1)
     life_status = match.group(2)
-    info_streamer = get_info_channel(streamer_name)[0]
+    info_streamer = get_info_stream(streamer_name)['data'][0]
     keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_open_channel(streamer_name),
                                                      keyboards_button_bac_to_streamers()])
     await event.message.delete()
-    lang_tag = info_streamer['broadcaster_language']
+    lang_tag = info_streamer['language']
     flag = languages_flags.get(lang_tag, '')
-    text = (f"Описание для стримера <b>{streamer_name}{life_status}</b>\n"
+    text = (f"{life_status} Описание трансляции стримера <b>{streamer_name}</b>\n"
             f"\n"
+            f"{f'👁 <b>Количество зрителей: {info_streamer['viewer_count']}\n\n</b>'if life_status == '🔴' else ''}"
             f"👅 <b>Язык трансляции: {flag}\n"
             f"\n"
             f"🎮 Категория {'текущей' if life_status == '🔴' else 'прошлой'} трансляции: {info_streamer['game_name']}\n"
@@ -94,7 +106,7 @@ async def handle_streamer_click(event: CallbackQuery):
             f"\n"
             f"⁉️ Теги {'текущей' if life_status == '🔴' else 'прошлой'} трансляции: {'➕'.join(info_streamer['tags'])}\n"
             f"\n"
-            f"⚠️ Стрим {'c' if info_streamer['content_classification_labels'] != '' else 'без'} возрастным ограничением!</b>")
+            f"⚠️ Стрим {'c возрастным ограничением' if info_streamer['is_mature'] is False else 'без возрастного ограничения'}!</b>")
 
     await bot.send_photo(
         chat_id=event.message.chat.id,

@@ -1,5 +1,9 @@
+import asyncio
+import time
+
 import requests
 import random
+from create_bot import bot
 
 
 def get_user_id(name):
@@ -72,20 +76,44 @@ def get_user_pf(name):
     return response['data'][0]['profile_image_url']
 
 
-def get_info_channel(name):
-    user_id = get_user_id(name)
-    url = f'https://api.twitch.tv/helix/channels?broadcaster_id={user_id}'
+async def check_streamer_life(name='iLame'):
+    url = f'https://api.twitch.tv/helix/streams?user_login={name}'
+    headers = {
+        'Authorization': 'Bearer 2eawmkloujpadta8wjp0qaiyihggjb',
+        'Client-Id': 'gp762nuuoqcoxypju8c569th9wz7q5'
+    }
+    status = False
+    while True:
+        try:
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+            response_data = response.json()
+            info_streamer = response_data['data']
+            if info_streamer:
+                if not status:
+                    status = True
+                    streamer_info = info_streamer[0]
+                    text = (f"🔴 Стример <b>{streamer_info['user_name']}</b> запустил трансляцию!\n"
+                            f"\n"
+                            f"<b>🎮 Категория текущей трансляции:</b> {streamer_info['game_name']}\n"
+                            f"\n"
+                            f"<b>📝 Описание текущей трансляции:</b> {streamer_info['title']}")
+                    await bot.send_message(1022548979, text=text, parse_mode='HTML')
+            else:
+                if status:
+                    status = False
+                    await bot.send_message(1022548979, f"⚫️ Стример <b>{name}</b> завершил трансляцию.", parse_mode='HTML')
+        except requests.exceptions.RequestException as e:
+            await bot.send_message(1022548979, f"Ошибка соединения с Twitch API: {e}")
+        await asyncio.sleep(5)
+
+
+def get_info_stream(name):
+    url = f'https://api.twitch.tv/helix/streams?user_login={name}'
     headers = {
         'Authorization': 'Bearer 2eawmkloujpadta8wjp0qaiyihggjb',
         'Client-Id': 'gp762nuuoqcoxypju8c569th9wz7q5'
     }
     response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        response = response.json()
-        return response['data']
-    else:
-        print(f"{response.status_code} - {response.text}")
-        return None
-
-
-print(get_info_channel('myrzen_u'))
+    response_data = response.json()
+    return response_data

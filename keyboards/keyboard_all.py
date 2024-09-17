@@ -49,3 +49,9 @@ def keyboard_button_open_channel(name):
 def keyboard_button_request_permission():
     keyboards = [InlineKeyboardButton(text="Запросить доступ", callback_data="request_permission")]
     return keyboards
+
+
+def keyboard_button_notif_stream():
+    keyboards = [InlineKeyboardButton(text="Уведомления о трансляции", callback_data="notif_stream")]
+    return keyboards
+

@@ -19,6 +19,10 @@ class UserDatabase:
         except sqlite3.Error as e:
             print(f"Ошибка при создании таблицы: {e}")
 
+    def full_request(self, request):
+        self.cursor.execute(f"{request}")
+        self.conn.commit()
+
     def add_record(self, tg_id_user, tg_login, table_name):
         try:
             self.cursor.execute(f'''
@@ -91,6 +95,19 @@ class UserDatabase:
             print(f"Произошла ошибка: {e}")
             return False
 
+    def add_user_for_notif(self, tg_id_user, name_streamer):
+        sql = '''INSERT INTO natif_stream (tg_id_user, name_streamer) 
+                 VALUES (?, ?)'''
+        try:
+            self.cursor.execute(sql, (tg_id_user, name_streamer))
+            self.conn.commit()
+            print("Запись добавлена успешно.")
+        except sqlite3.Error as e:
+            print(f"Ошибка при добавлении записи: {e}")
+        finally:
+            self.cursor.close()
+            self.conn.close()
+
 
 if __name__ == '__main__':
     db = UserDatabase()
@@ -158,6 +175,15 @@ if __name__ == '__main__':
         elif command == 'add_permission':
             id_record = int(input("Введите id записи таблицы request_permission: "))
             db.add_permission(id_record)
+
+        elif command == "full_request":
+            request = input('Введите запрос: ')
+            db.full_request(request)
+
+        elif command == "add_for_notif":
+            tg_id_user = int(input("Введите tg_id_user: "))
+            name_streamer = (input("Введите name_streamer: "))
+            db.add_user_for_notif(tg_id_user, name_streamer)
 
         else:
             print("Неверная команда. Пожалуйста, попробуйте снова.")
