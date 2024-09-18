@@ -93,12 +93,17 @@ async def check_streamer_life(id_tg, name):
                 if not status:
                     status = True
                     streamer_info = info_streamer[0]
-                    text = (f"🔴 Стример <b>{streamer_info['user_name']}</b> запустил трансляцию!\n"
+                    streamer_name = streamer_info['user_name']
+                    text = (f"🔴 Стример <b>{streamer_name}</b> запустил трансляцию!\n"
                             f"\n"
                             f"<b>🎮 Категория текущей трансляции:</b> {streamer_info['game_name']}\n"
                             f"\n"
                             f"<b>📝 Описание текущей трансляции:</b> {streamer_info['title']}")
-                    await bot.send_message(id_tg, text=text, parse_mode='HTML')
+                    await bot.send_photo(
+                        chat_id=id_tg,
+                        photo=get_user_pf(streamer_name),
+                        caption=text,
+                        parse_mode='HTML')
             else:
                 if status:
                     status = False

@@ -5,6 +5,7 @@ from request_twitch_api.api_request import check_streamer_life
 # from work_time.time_func import send_time_msg
 from aiogram.types import BotCommand, BotCommandScopeDefault
 from keyboards.keyboard_all import *
+from db_handler.db_class import UserDatabase
 
 
 async def set_commands():
@@ -12,8 +13,17 @@ async def set_commands():
     await bot.set_my_commands(commands, BotCommandScopeDefault())
 
 
+def check_start_stream():
+    db_user = UserDatabase(db_name="db_handler/tg_auth.db")
+    streamers = db_user.get_data_for_notif()
+    for i in streamers:
+        asyncio.create_task(check_streamer_life(i[0], i[1]))
+
+
 async def start_bot():
     await set_commands()
+    check_start_stream()
+
 
 
 async def main():

@@ -53,7 +53,12 @@ def keyboard_button_request_permission():
 
 
 def keyboard_button_notif_stream():
-    keyboards = [InlineKeyboardButton(text="Уведомления о трансляции", callback_data="notif_stream")]
+    keyboards = [InlineKeyboardButton(text="Уведомления о трансляциях", callback_data="notif_stream")]
+    return keyboards
+
+
+def keyboard_button_bac_to_notif_stream():
+    keyboards = [InlineKeyboardButton(text="Список стримеров", callback_data="notif_stream")]
     return keyboards
 
 

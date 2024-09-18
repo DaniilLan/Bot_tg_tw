@@ -25,11 +25,6 @@ user_action = {}
 @start_router.callback_query(F.data == "back_to_start")
 @user_permission_required
 async def cmd_start(event: Message | CallbackQuery):
-    db_user = UserDatabase(db_name="db_handler/tg_auth.db")
-    id_user = event.from_user.id
-    streamers = db_user.get_name_streamers(id_user)
-    for i in streamers:
-        asyncio.create_task(check_streamer_life(id_user, i[0]))
     message = None
     if isinstance(event, CallbackQuery):
         await event.answer()
@@ -49,26 +44,8 @@ async def cmd_start(event: Message | CallbackQuery):
         await message.edit_text(text_command, reply_markup=keyboard)
 
 
-@start_router.callback_query(F.data == "notif_stream")
-async def handle_request_permission(event: CallbackQuery):
-    await event.answer()
-    db_user = UserDatabase(db_name="db_handler/tg_auth.db")
-    id_user = event.from_user.id
-    my_streamers = db_user.get_name_streamers(id_user=id_user)
-
-    # Извлекаем имена стримеров из кортежей
-    my_streamers = [streamer[0] for streamer in my_streamers]
-
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_add_notif(),
-                                                     keyboards_button_bac_to_start()])
-    await event.message.edit_text(f'🔔\n'
-                                  f'<b>Ты будешь получать уведомления о начале трансляции стримера(ов):</b>\n\n'
-                                  f'<b>➡️ {"\n➡️ ".join(my_streamers)}</b>', reply_markup=keyboard, parse_mode="HTML")
-    db_user.close()
-
-
-
 @start_router.callback_query(F.data == "request_permission")
+@user_permission_required
 async def handle_request_permission(event: CallbackQuery):
     await event.answer()
     db_user = UserDatabase(db_name="db_handler/tg_auth.db")
@@ -90,7 +67,7 @@ async def handle_request_permission(event: CallbackQuery):
 @user_permission_required
 async def handle_wait_write_nickname(event: CallbackQuery):
     await event.answer()
-    await event.message.edit_text("Жду твой ник-нейм на твиче ⏳")
+    await event.message.edit_text("Жду ник-нейм на твиче ⏳")
     user_nickname[event.from_user.id] = True
 
 
@@ -100,6 +77,7 @@ async def handle_wait_write_nickname(event: CallbackQuery):
     await event.answer()
     await event.message.edit_text("Жду ник-нейм стримера на твиче ⏳")
     user_nickname[event.from_user.id] = True
+
 
 
 @start_router.callback_query(F.data.startswith('streamer_'))
@@ -114,32 +92,38 @@ async def handle_streamer_click(event: CallbackQuery):
 
     streamer_name = match.group(1)
     life_status = match.group(2)
-    info_streamer = get_info_stream(streamer_name)['data'][0]
+    streamers = get_info_stream(streamer_name)
     keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_open_channel(streamer_name),
                                                      keyboards_button_bac_to_streamers()])
-    await event.message.delete()
-    lang_tag = info_streamer['language']
-    flag = languages_flags.get(lang_tag, '')
-    text = (f"{life_status} Описание трансляции стримера <b>{streamer_name}</b>\n"
-            f"\n"
-            f"{f'👁 <b>Количество зрителей: {info_streamer['viewer_count']}\n\n</b>' if life_status == '🔴' else ''}"
-            f"👅 <b>Язык трансляции: {flag}\n"
-            f"\n"
-            f"🎮 Категория {'текущей' if life_status == '🔴' else 'прошлой'} трансляции: {info_streamer['game_name']}\n"
-            f"\n"
-            f"📝 Описание {'текущей' if life_status == '🔴' else 'прошлой'} трансляции: {info_streamer['title']}\n"
-            f"\n"
-            f"⁉️ Теги {'текущей' if life_status == '🔴' else 'прошлой'} трансляции: {'➕'.join(info_streamer['tags'])}\n"
-            f"\n"
-            f"⚠️ Стрим {'c возрастным ограничением' if info_streamer['is_mature'] is False else 'без возрастного ограничения'}!</b>")
+    if not streamers['data']:
+        await event.message.edit_text(f'Стример {streamer_name} офлайн, позже добавлю описание его последней трансляции.', reply_markup=keyboard)
+    else:
+        info_streamer = get_info_stream(streamer_name)['data'][0]
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_open_channel(streamer_name),
+                                                         keyboards_button_bac_to_streamers()])
+        await event.message.delete()
+        lang_tag = info_streamer['language']
+        flag = languages_flags.get(lang_tag, '')
+        text = (f"{life_status} Описание трансляции стримера <b>{streamer_name}</b>\n"
+                f"\n"
+                f"{f'👁 <b>Количество зрителей: {info_streamer['viewer_count']}\n\n</b>' if life_status == '🔴' else ''}"
+                f"👅 <b>Язык трансляции: {flag}\n"
+                f"\n"
+                f"🎮 Категория {'текущей' if life_status == '🔴' else 'прошлой'} трансляции: {info_streamer['game_name']}\n"
+                f"\n"
+                f"📝 Описание {'текущей' if life_status == '🔴' else 'прошлой'} трансляции: {info_streamer['title']}\n"
+                f"\n"
+                f"⁉️ Теги {'текущей' if life_status == '🔴' else 'прошлой'} трансляции: {'➕'.join(info_streamer['tags'])}\n"
+                f"\n"
+                f"⚠️ Стрим {'c возрастным ограничением' if info_streamer['is_mature'] is False else 'без возрастного ограничения'}!</b>")
 
-    await bot.send_photo(
-        chat_id=event.message.chat.id,
-        photo=get_user_pf(streamer_name),
-        reply_markup=keyboard,
-        caption=text,
-        parse_mode='HTML'
-    )
+        await bot.send_photo(
+            chat_id=event.message.chat.id,
+            photo=get_user_pf(streamer_name),
+            reply_markup=keyboard,
+            caption=text,
+            parse_mode='HTML'
+        )
 
 
 @start_router.callback_query(F.data == "back_to_streamers")
@@ -208,6 +192,34 @@ async def handle_random_followers(event: CallbackQuery):
     user_messages[event.message.from_user.id] = sent_message.message_id
 
 
+@start_router.callback_query(F.data == "notif_stream")
+@user_permission_required
+async def handle_request_permission(event: CallbackQuery):
+    await event.answer()
+    db_user = UserDatabase(db_name="db_handler/tg_auth.db")
+    user_action[event.from_user.id] = 'add_notif_stream'
+    id_user = event.from_user.id
+    my_streamers = db_user.get_name_streamers(id_user=id_user)
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_add_notif(),
+                                                     keyboards_button_bac_to_start()])
+    if not my_streamers:
+        sent_message = await event.message.edit_text(f'🔔\n'
+                                                     f'<b>Ты будешь получать уведомления о начале трансляции стримера(ов):</b>\n\n'
+                                                     f'<b>➡️ Список стримеров пуст!\n Нажми кнопку "Добавить '
+                                                     f'стримера", что бы получать уведомления о начале его '
+                                                     f'трансялции.</b>', reply_markup=keyboard,
+                                                     parse_mode="HTML")
+        user_messages[event.message.from_user.id] = sent_message.message_id
+        db_user.close()
+    else:
+        my_streamers = [streamer[0] for streamer in my_streamers]
+        sent_message = await event.message.edit_text(f'🔔\n'
+                                      f'<b>Ты будешь получать уведомления о начале трансляции стримера(ов):</b>\n\n'
+                                      f'<b>➡️ {"\n➡️ ".join(my_streamers)}</b>', reply_markup=keyboard, parse_mode="HTML")
+        user_messages[event.message.from_user.id] = sent_message.message_id
+        db_user.close()
+
+
 @start_router.message()
 @user_permission_required
 async def handle_message(event: Message):
@@ -259,6 +271,20 @@ async def handle_message(event: Message):
                 ])
                 await event.answer("Похоже, у тебя нет подписчиков или ты накосячил с ник-неймом!",
                                    reply_markup=keyboard)
+        elif action == 'add_notif_stream':
+            id_user = event.from_user.id
+            name_streamer = event.text
+            db_user = UserDatabase(db_name="db_handler/tg_auth.db")
+            if db_user.add_user_for_notif(id_user, name_streamer):
+                keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_bac_to_notif_stream(),
+                                                                 keyboards_button_bac_to_start()])
+                await event.answer(f"Стример {name_streamer} добавлен в ваши уведомления!", reply_markup=keyboard)
+                db_user.close()
+            else:
+                await event.answer(f"Запрос не прошел в базе данных.")
+                db_user.close()
+
+
 
 
 @start_router.callback_query(F.data == "re_roll_follow")

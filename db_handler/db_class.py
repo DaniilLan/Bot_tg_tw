@@ -69,6 +69,12 @@ class UserDatabase:
         ''', (id_user,))
         return self.cursor.fetchall()
 
+    def get_data_for_notif(self):
+        self.cursor.execute('''
+        SELECT tg_id_user, name_streamer FROM notif_stream
+        ''')
+        return self.cursor.fetchall()
+
     def get_all(self, table_name):
         self.cursor.execute(f'SELECT * FROM {table_name}')
         return self.cursor.fetchall()
@@ -114,20 +120,19 @@ class UserDatabase:
             self.cursor.execute(sql, (tg_id_user, name_streamer))
             self.conn.commit()
             print("Запись добавлена успешно.")
+            return True
         except sqlite3.Error as e:
             print(f"Ошибка при добавлении записи: {e}")
-        finally:
-            self.cursor.close()
-            self.conn.close()
 
 
 if __name__ == '__main__':
     db = UserDatabase()
 
     while True:
-        command = input("Введите команду (add, delete, update, get, get_all, "
-                        "exit, create_table, drop_table, add_permission"
-                        "get_streamers, add_for_notif, full_request, get_name_streamer): ")
+        command = input("Введите команду (add, delete, update, get, get_all, \n"
+                        "exit, create_table, drop_table, add_permission\n"
+                        "get_streamers, add_for_notif, full_request, get_name_streamer, \n"
+                        "get_data_for_notif): ")
 
         if command == 'add':
             table_name = input("Введите название таблицы: ")
@@ -206,6 +211,8 @@ if __name__ == '__main__':
             tg_id_user = input("Введите id_tg_user: ")
             print(db.get_name_streamers(tg_id_user))
 
+        elif command == 'get_data_for_notif':
+            print(db.get_data_for_notif())
 
         else:
             print("Неверная команда. Пожалуйста, попробуйте снова.")
