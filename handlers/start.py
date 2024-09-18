@@ -101,13 +101,13 @@ async def handle_streamer_click(event: CallbackQuery):
 
     streamer_name = match.group(1)
     life_status = match.group(2)
-    streamers = get_info_stream(streamer_name)
+    streamers = get_info_stream(streamer_name)[0]
     keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_open_channel(streamer_name),
                                                      keyboards_button_bac_to_streamers()])
     if not streamers['data']:
         await event.message.edit_text(f'Стример {streamer_name} офлайн, позже добавлю описание его последней трансляции.', reply_markup=keyboard)
     else:
-        info_streamer = get_info_stream(streamer_name)['data'][0]
+        info_streamer = streamers['data'][0]
         keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_open_channel(streamer_name),
                                                          keyboards_button_bac_to_streamers()])
         await event.message.delete()
