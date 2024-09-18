@@ -75,9 +75,18 @@ async def handle_wait_write_nickname(event: CallbackQuery):
 @user_permission_required
 async def handle_wait_write_nickname(event: CallbackQuery):
     await event.answer()
+    user_action[event.from_user.id] = 'add_notif_stream'
     await event.message.edit_text("Жду ник-нейм стримера на твиче ⏳")
     user_nickname[event.from_user.id] = True
 
+
+@start_router.callback_query(F.data == "delete_notif_stream")
+@user_permission_required
+async def handle_wait_write_nickname(event: CallbackQuery):
+    await event.answer()
+    user_action[event.from_user.id] = 'delete_notif_stream'
+    await event.message.edit_text("Жду ник-нейм стримера на твиче для удаления из уведомлений ⏳")
+    user_nickname[event.from_user.id] = True
 
 
 @start_router.callback_query(F.data.startswith('streamer_'))
@@ -197,7 +206,6 @@ async def handle_random_followers(event: CallbackQuery):
 async def handle_request_permission(event: CallbackQuery):
     await event.answer()
     db_user = UserDatabase(db_name="db_handler/tg_auth.db")
-    user_action[event.from_user.id] = 'add_notif_stream'
     id_user = event.from_user.id
     my_streamers = db_user.get_name_streamers(id_user=id_user)
     keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_add_notif(),
@@ -213,6 +221,9 @@ async def handle_request_permission(event: CallbackQuery):
         db_user.close()
     else:
         my_streamers = [streamer[0] for streamer in my_streamers]
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_add_notif(),
+                                                         keyboard_button_delete_notif(),
+                                                         keyboards_button_bac_to_start()])
         sent_message = await event.message.edit_text(f'🔔\n'
                                       f'<b>Ты будешь получать уведомления о начале трансляции стримера(ов):</b>\n\n'
                                       f'<b>➡️ {"\n➡️ ".join(my_streamers)}</b>', reply_markup=keyboard, parse_mode="HTML")
@@ -274,18 +285,39 @@ async def handle_message(event: Message):
         elif action == 'add_notif_stream':
             id_user = event.from_user.id
             name_streamer = event.text
-            db_user = UserDatabase(db_name="db_handler/tg_auth.db")
-            if db_user.add_user_for_notif(id_user, name_streamer):
+            info = get_info_stream(name_streamer)
+            if info[1] == 400:
+                keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_re_write_notif(),
+                                                                 keyboards_button_bac_to_start()])
+                await event.answer(f"Похоже, такого стримера нету или ты накосячил с ник-неймом!", reply_markup=keyboard)
+            else:
+                db_user = UserDatabase(db_name="db_handler/tg_auth.db")
                 keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_bac_to_notif_stream(),
                                                                  keyboards_button_bac_to_start()])
-                await event.answer(f"Стример {name_streamer} добавлен в ваши уведомления!", reply_markup=keyboard)
-                db_user.close()
+                add_user = db_user.add_user_for_notif(id_user, name_streamer)
+                if add_user:
+                    await event.answer(f"Стример {name_streamer} добавлен в ваши уведомления!", reply_markup=keyboard)
+                    db_user.close()
+                else:
+                    if add_user is False:
+                        await event.answer(f"Похоже ты уже добавил стримера {name_streamer} для уведомлений.", reply_markup=keyboard)
+                    else:
+                        await event.answer(f"Запрос не прошел в базе данных.", reply_markup=keyboard)
+                    db_user.close()
+        elif action == 'delete_notif_stream':
+            id_user = event.from_user.id
+            name_streamer = event.text
+            db_user = UserDatabase(db_name="db_handler/tg_auth.db")
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_bac_to_notif_stream(),
+                                                             keyboards_button_bac_to_start()])
+            if db_user.delete_streamer(name_streamer, id_user):
+                keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_bac_to_notif_stream(),
+                                                                 keyboards_button_bac_to_start()])
+                await event.answer(f"Стример {name_streamer} удален из твоего списка уведомлений!",
+                                   reply_markup=keyboard)
             else:
-                await event.answer(f"Запрос не прошел в базе данных.")
-                db_user.close()
-
-
-
+                await event.answer(f"Похоже ты ошибся с ник-неймом или этого стрмиера нет в твоих уведомлениях.",
+                                   reply_markup=keyboard)
 
 @start_router.callback_query(F.data == "re_roll_follow")
 @user_permission_required

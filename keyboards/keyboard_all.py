@@ -65,3 +65,14 @@ def keyboard_button_bac_to_notif_stream():
 def keyboard_button_add_notif():
     keyboards = [InlineKeyboardButton(text="Добавить стримера", callback_data="add_notif_stream")]
     return keyboards
+
+
+def keyboard_button_delete_notif():
+    keyboards = [InlineKeyboardButton(text="Удалить стримера", callback_data="delete_notif_stream")]
+    return keyboards
+
+
+def keyboard_button_re_write_notif():
+    keyboards = [InlineKeyboardButton(text="Написать другой ник", callback_data="add_notif_stream")]
+    return keyboards
+

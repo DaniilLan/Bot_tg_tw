@@ -20,7 +20,7 @@ class UserDatabase:
             print(f"Ошибка при создании таблицы: {e}")
 
     def full_request(self, request):
-        self.cursor.execute(f"{request}")
+        self.cursor.execute(str(request))
         self.conn.commit()
 
     def add_record(self, tg_id_user, tg_login, table_name):
@@ -37,6 +37,18 @@ class UserDatabase:
         DELETE FROM users WHERE id = ?
         ''', (id_user,))
         self.conn.commit()
+
+    def delete_streamer(self, name_streamer, tg_id_user):
+        name_streamer = name_streamer.lower()
+        try:
+            self.cursor.execute('''
+            DELETE FROM notif_stream WHERE name_streamer = ? AND tg_id_user = ?
+            ''', (name_streamer, tg_id_user))
+            self.conn.commit()
+            return True
+        except Exception as e:
+            print(f"Ошибка при удалении стримера: {e}")
+            return False
 
     def update_user(self, id_user, tg_id_user=None, tg_login=None):
         if tg_id_user is not None:
@@ -114,6 +126,7 @@ class UserDatabase:
             return False
 
     def add_user_for_notif(self, tg_id_user, name_streamer):
+        name_streamer = name_streamer.lower()
         sql = '''INSERT INTO notif_stream (tg_id_user, name_streamer) 
                  VALUES (?, ?)'''
         try:
@@ -123,6 +136,7 @@ class UserDatabase:
             return True
         except sqlite3.Error as e:
             print(f"Ошибка при добавлении записи: {e}")
+            return False
 
 
 if __name__ == '__main__':
@@ -132,7 +146,7 @@ if __name__ == '__main__':
         command = input("Введите команду (add, delete, update, get, get_all, \n"
                         "exit, create_table, drop_table, add_permission\n"
                         "get_streamers, add_for_notif, full_request, get_name_streamer, \n"
-                        "get_data_for_notif): ")
+                        "get_data_for_notif, delete_streamer, delete_streamer): ")
 
         if command == 'add':
             table_name = input("Введите название таблицы: ")
@@ -214,5 +228,8 @@ if __name__ == '__main__':
         elif command == 'get_data_for_notif':
             print(db.get_data_for_notif())
 
+        elif command == 'delete_streamer':
+            id = (int(input("Введите id записи: ")))
+            print(db.delete_streamer(id))
         else:
             print("Неверная команда. Пожалуйста, попробуйте снова.")

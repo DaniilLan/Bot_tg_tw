@@ -3,7 +3,11 @@ import time
 
 import requests
 import random
+
+from aiogram.types import InlineKeyboardMarkup
+
 from create_bot import bot
+from keyboards.keyboard_all import keyboard_button_open_channel, keyboards_button_bac_to_streamers
 
 
 def get_user_id(name):
@@ -94,6 +98,7 @@ async def check_streamer_life(id_tg, name):
                     status = True
                     streamer_info = info_streamer[0]
                     streamer_name = streamer_info['user_name']
+                    keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_open_channel(streamer_name)])
                     text = (f"🔴 Стример <b>{streamer_name}</b> запустил трансляцию!\n"
                             f"\n"
                             f"<b>🎮 Категория текущей трансляции:</b> {streamer_info['game_name']}\n"
@@ -103,7 +108,8 @@ async def check_streamer_life(id_tg, name):
                         chat_id=id_tg,
                         photo=get_user_pf(streamer_name),
                         caption=text,
-                        parse_mode='HTML')
+                        parse_mode='HTML',
+                        reply_markup=keyboard)
             else:
                 if status:
                     status = False
@@ -120,5 +126,8 @@ def get_info_stream(name):
         'Client-Id': 'gp762nuuoqcoxypju8c569th9wz7q5'
     }
     response = requests.get(url, headers=headers)
+    status = response.status_code
     response_data = response.json()
-    return response_data
+    return response_data, status
+
+
