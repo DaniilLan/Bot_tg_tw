@@ -113,7 +113,8 @@ async def handle_streamer_click(event: CallbackQuery):
         await event.message.delete()
         lang_tag = info_streamer['language']
         flag = languages_flags.get(lang_tag, '')
-        text = (f"{life_status} Описание трансляции стримера <b>{streamer_name}</b>\n"
+        text = (f"{life_status} <b>{streamer_name}</b>\n"
+                f"Описание трансляции стримера:\n"
                 f"\n"
                 f"{f'👁 <b>Количество зрителей: {info_streamer['viewer_count']}\n\n</b>' if life_status == '🔴' else ''}"
                 f"👅 <b>Язык трансляции: {flag}\n"

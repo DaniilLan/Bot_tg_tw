@@ -115,7 +115,7 @@ async def check_streamer_life(id_tg, name):
                     status = False
                     await bot.send_message(id_tg, f"⚫️ Стример <b>{name}</b> завершил трансляцию.", parse_mode='HTML')
         except requests.exceptions.RequestException as e:
-            await bot.send_message(id_tg, f"Ошибка соединения с Twitch API: {e}")
+            print(id_tg, f"Ошибка соединения с Twitch API: {e}")
         await asyncio.sleep(5)
 
 
@@ -129,5 +129,3 @@ def get_info_stream(name):
     status = response.status_code
     response_data = response.json()
     return response_data, status
-
-
