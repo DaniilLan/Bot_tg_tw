@@ -1,13 +1,11 @@
 import asyncio
 import time
-
+from datetime import datetime, timezone
 import requests
 import random
-
 from aiogram.types import InlineKeyboardMarkup
-
 from create_bot import bot
-from keyboards.keyboard_all import keyboard_button_open_channel, keyboards_button_bac_to_streamers
+from keyboards.keyboard_all import keyboard_button_open_channel
 
 
 def get_user_id(name):
@@ -87,23 +85,27 @@ async def check_streamer_life(id_tg, name):
         'Client-Id': 'gp762nuuoqcoxypju8c569th9wz7q5'
     }
     status = False
+    start_time = None
     while True:
         try:
             response = requests.get(url, headers=headers)
             response.raise_for_status()
             response_data = response.json()
             info_streamer = response_data['data']
+
             if info_streamer:
                 if not status:
                     status = True
                     streamer_info = info_streamer[0]
                     streamer_name = streamer_info['user_name']
+                    start_time = streamer_info['started_at']  # Сохраняем время начала трансляции
+
                     keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_open_channel(streamer_name)])
                     text = (f"🔴 <b>{streamer_name}</b> запустил трансляцию!\n"
                             f"\n"
                             f"<b>🎮 Категория текущей трансляции:</b> {streamer_info['game_name']}\n"
                             f"\n"
-                            f"<b>📝 Описание текущей трансляции:</b> {streamer_info['title']}")
+                            f"<b>📝 Описание текущей трансляции:</b> {streamer_info['title']}\n")
                     await bot.send_photo(
                         chat_id=id_tg,
                         photo=get_user_pf(streamer_name),
@@ -113,10 +115,25 @@ async def check_streamer_life(id_tg, name):
             else:
                 if status:
                     status = False
-                    await bot.send_message(id_tg, f"⚫️ Стример <b>{name}</b> завершил трансляцию.", parse_mode='HTML')
+                    # Вычисляем длительность трансляции
+                    duration = time_difference_stream(start_time)
+                    await bot.send_message(id_tg, f"⚫️ <b>{name}</b> завершил трансляцию.\n"
+                                                  f"Трансляция длилась - {duration}", parse_mode='HTML')
+                    start_time = None  # Сбрасываем время начала после завершения трансляции
+
         except requests.exceptions.RequestException as e:
             print(id_tg, f"Ошибка соединения с Twitch API: {e}")
+
         await asyncio.sleep(5)
+
+
+def time_difference_stream(date_start_stream):
+    date_1 = datetime.fromisoformat(date_start_stream.replace("Z", "+00:00"))
+    current_time = datetime.now(timezone.utc)
+    formatted_time = current_time.strftime('%Y-%m-%dT%H:%M:%SZ')
+    date_2 = datetime.fromisoformat(formatted_time.replace("Z", "+00:00"))
+    time_difference = date_2 - date_1
+    return time_difference
 
 
 def get_info_stream(name):

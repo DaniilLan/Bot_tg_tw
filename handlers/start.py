@@ -56,6 +56,7 @@ async def handle_request_permission(event: CallbackQuery):
         await event.message.edit_text("Запрос на предоставление доступа уже был отправлен!\n"
                                       "Ждите результата обработки.\n"
                                       "Обработка может занять до 24ч⏳")
+
     else:
         await event.message.edit_text("Запрос на предоставление доступа был отправлен!\n"
                                       "Ждите результата обработки.\n"
@@ -67,7 +68,7 @@ async def handle_request_permission(event: CallbackQuery):
 @user_permission_required
 async def handle_wait_write_nickname(event: CallbackQuery):
     await event.answer()
-    await event.message.edit_text("Жду ник-нейм на твиче ⏳")
+    await event.message.edit_text("⏳ Жду ник-нейм на твиче...")
     user_nickname[event.from_user.id] = True
 
 
@@ -76,7 +77,7 @@ async def handle_wait_write_nickname(event: CallbackQuery):
 async def handle_wait_write_nickname(event: CallbackQuery):
     await event.answer()
     user_action[event.from_user.id] = 'add_notif_stream'
-    await event.message.edit_text("Жду ник-нейм стримера на твиче ⏳")
+    await event.message.edit_text("⏳ Жду ник-нейм стримера на твиче...")
     user_nickname[event.from_user.id] = True
 
 
@@ -85,7 +86,7 @@ async def handle_wait_write_nickname(event: CallbackQuery):
 async def handle_wait_write_nickname(event: CallbackQuery):
     await event.answer()
     user_action[event.from_user.id] = 'delete_notif_stream'
-    await event.message.edit_text("Жду ник-нейм стримера на твиче для удаления из уведомлений ⏳")
+    await event.message.edit_text("⏳ Жду ник-нейм стримера на твиче для удаления из уведомлений...")
     user_nickname[event.from_user.id] = True
 
 
