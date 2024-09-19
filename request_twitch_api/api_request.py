@@ -99,7 +99,7 @@ async def check_streamer_life(id_tg, name):
                     streamer_info = info_streamer[0]
                     streamer_name = streamer_info['user_name']
                     keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_open_channel(streamer_name)])
-                    text = (f"🔴 Стример <b>{streamer_name}</b> запустил трансляцию!\n"
+                    text = (f"🔴 <b>{streamer_name}</b> запустил трансляцию!\n"
                             f"\n"
                             f"<b>🎮 Категория текущей трансляции:</b> {streamer_info['game_name']}\n"
                             f"\n"
