@@ -36,7 +36,7 @@ async def cmd_start(event: Message | CallbackQuery):
         keyboard_button_check_streamers(),
         keyboard_button_notif_stream()
     ])
-    text_command = ('Приветствую!\n'
+    text_command = ('Приветствую!\n\n'
                     'Ниже весь доступный функционал бота!')
     if isinstance(event, Message):
         await message.answer(text_command, reply_markup=keyboard)
