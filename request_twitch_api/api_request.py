@@ -6,6 +6,7 @@ import random
 from aiogram.types import InlineKeyboardMarkup
 from create_bot import bot
 from keyboards.keyboard_all import keyboard_button_open_channel
+from db_handler.db_class import UserDatabase
 
 
 def get_user_id(name):
@@ -78,52 +79,53 @@ def get_user_pf(name):
     return response['data'][0]['profile_image_url']
 
 
-async def check_streamer_life(id_tg, name):
-    url = f'https://api.twitch.tv/helix/streams?user_login={name}'
-    headers = {
-        'Authorization': 'Bearer 2eawmkloujpadta8wjp0qaiyihggjb',
-        'Client-Id': 'gp762nuuoqcoxypju8c569th9wz7q5'
-    }
-    status = False
-    start_time = None
-    while True:
-        try:
-            response = requests.get(url, headers=headers)
-            response.raise_for_status()
-            response_data = response.json()
-            info_streamer = response_data['data']
-
-            if info_streamer:
-                if not status:
-                    status = True
-                    streamer_info = info_streamer[0]
-                    streamer_name = streamer_info['user_name']
-                    start_time = streamer_info['started_at']
-
-                    keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_open_channel(streamer_name)])
-                    text = (f"🔴 <b>{streamer_name}</b> запустил трансляцию!\n"
-                            f"\n"
-                            f"<b>🎮 Категория текущей трансляции:</b> {streamer_info['game_name']}\n"
-                            f"\n"
-                            f"<b>📝 Описание текущей трансляции:</b> {streamer_info['title']}\n")
-                    await bot.send_photo(
-                        chat_id=id_tg,
-                        photo=get_user_pf(streamer_name),
-                        caption=text,
-                        parse_mode='HTML',
-                        reply_markup=keyboard)
-            else:
-                if status:
-                    status = False
-                    duration = time_difference_stream(start_time)
-                    await bot.send_message(id_tg, f"⚫️ <b>{name}</b> завершил трансляцию.\n"
-                                                  f"Трансляция длилась - {duration}", parse_mode='HTML')
-                    start_time = None
-
-        except requests.exceptions.RequestException as e:
-            print(id_tg, f"Ошибка соединения с Twitch API: {e}")
-
-        await asyncio.sleep(10)
+# async def check_streamer_life(id_tg, name): ----------------------------------------------------old method
+#     url = f'https://api.twitch.tv/helix/streams?user_login={name}'
+#     headers = {
+#         'Authorization': 'Bearer 2eawmkloujpadta8wjp0qaiyihggjb',
+#         'Client-Id': 'gp762nuuoqcoxypju8c569th9wz7q5'
+#     }
+#     status = False
+#     start_time = None
+#     while True:
+#         print("Принт 1 функции")
+#         try:
+#             response = requests.get(url, headers=headers)
+#             response.raise_for_status()
+#             response_data = response.json()
+#             info_streamer = response_data['data']
+#
+#             if info_streamer:
+#                 if not status:
+#                     status = True
+#                     streamer_info = info_streamer[0]
+#                     streamer_name = streamer_info['user_name']
+#                     start_time = streamer_info['started_at']
+#
+#                     keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_open_channel(streamer_name)])
+#                     text = (f"🔴 <b>{streamer_name}</b> запустил трансляцию!\n"
+#                             f"\n"
+#                             f"<b>🎮 Категория текущей трансляции:</b> {streamer_info['game_name']}\n"
+#                             f"\n"
+#                             f"<b>📝 Описание текущей трансляции:</b> {streamer_info['title']}\n")
+#                     await bot.send_photo(
+#                         chat_id=id_tg,
+#                         photo=get_user_pf(streamer_name),
+#                         caption=text,
+#                         parse_mode='HTML',
+#                         reply_markup=keyboard)
+#             else:
+#                 if status:
+#                     status = False
+#                     duration = time_difference_stream(start_time)
+#                     await bot.send_message(id_tg, f"⚫️ <b>{name}</b> завершил трансляцию.\n"
+#                                                   f"Трансляция длилась - {duration}", parse_mode='HTML')
+#                     start_time = None
+#
+#         except requests.exceptions.RequestException as e:
+#             print(id_tg, f"Ошибка соединения с Twitch API: {e}")
+#
+#         await asyncio.sleep(10)
 
 
 def time_difference_stream(date_start_stream):
@@ -147,41 +149,66 @@ def get_info_stream(name):
     return response_data, status
 
 
-def get_streams(name1, name2, name3, name4):
-    url = (f'https://api.twitch.tv/helix/streams/?'
-           f'user_id={get_user_id(name1)}'
-           f'&user_id={get_user_id(name2)}'
-           f'&user_id={get_user_id(name3)}'
-           f'&user_id={get_user_id(name4)}')
+async def check_streamer_life(id_tg):
+    db_user = UserDatabase()
+    list_streamers = [item[0] for item in db_user.get_name_streamers(id_tg)]
+    list_streamers_id = [get_user_id(i) for i in list_streamers]
+    user_ids = "&user_id=".join(list_streamers_id)
+    url = f'https://api.twitch.tv/helix/streams/?user_id={user_ids}'
     headers = {
         'Authorization': 'Bearer 2eawmkloujpadta8wjp0qaiyihggjb',
         'Client-Id': 'gp762nuuoqcoxypju8c569th9wz7q5'
     }
-    status = False
-    start_time = None
+
     list_streams_life = []
-    list_streams_of = ['a_hyena_dobr', 'eslcs', 'ubica', 'tabula_russia']
+    full_info = {}
+
     while True:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
         response_data = response.json()
+        info_streamer = response_data['data']
         now_streams = []
-        if response_data and not status:
-            for i in response_data['data']:
-                if i['user_login'] not in list_streams_life:
-                    list_streams_life.append(i['user_login'])
-                    list_streams_of.remove(i['user_login'])
-                    print(f"Стример {i['user_login']} онлайн")
-                now_streams.append(i['user_login'])
-            print("Cтримы онл", list_streams_life)
-            print("Стримы офл", list_streams_of)
-            diff_stream = list(set(list_streams_life) - set(now_streams))
-            if diff_stream:
-                if diff_stream not in list_streams_of:
-                    list_streams_of.append(diff_stream[0])
-                    list_streams_life.remove(diff_stream[0])
-                    print(f"Стример {diff_stream[0]} завершил трансляцию!")
-        time.sleep(5)
+
+        for i in info_streamer:
+            name_streamer = i['user_login']
+            now_streams.append(name_streamer)
+
+            if name_streamer not in list_streams_life:
+                list_streams_life.append(name_streamer)
+                full_info[name_streamer] = i
+                streamer_info = full_info[name_streamer]
+                streamer_name = streamer_info['user_name']
+
+                keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_open_channel(streamer_name)])
+                text = (f"🔴 <b>{streamer_name}</b> запустил трансляцию!\n"
+                        f"\n"
+                        f"<b>🎮 Категория текущей трансляции:</b> {streamer_info['game_name']}\n"
+                        f"\n"
+                        f"<b>📝 Описание текущей трансляции:</b> {streamer_info['title']}\n")
+
+                await bot.send_photo(
+                    chat_id=id_tg,
+                    photo=get_user_pf(streamer_name),
+                    caption=text,
+                    parse_mode='HTML',
+                    reply_markup=keyboard)
+                print(f"Стример {name_streamer} онлайн")
+
+        finished_streams = list(set(list_streams_life) - set(now_streams))
+
+        for name_streamer in finished_streams:
+            list_streams_life.remove(name_streamer)
+            duration = time_difference_stream(full_info[name_streamer]['started_at'])
+
+            await bot.send_message(
+                chat_id=id_tg,
+                text=f"⚫️ <b>{name_streamer}</b> завершил трансляцию.\n"
+                     f"Трансляция длилась - {duration}",
+                parse_mode='HTML'
+            )
+            print(f"Стример {name_streamer} завершил трансляцию!")
+
+        await asyncio.sleep(15)
 
 
-get_streams('a_hyena_dobr', 'eslcs', 'ubica', 'tabula_russia')

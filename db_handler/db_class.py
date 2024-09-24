@@ -2,7 +2,7 @@ import sqlite3
 
 
 class UserDatabase:
-    def __init__(self, db_name='tg_auth.db'):
+    def __init__(self, db_name='C:/Users/landa/PycharmProjects/Bot_tg_twitch/db_handler/tg_auth.db'):
         self.conn = sqlite3.connect(db_name)
         self.cursor = self.conn.cursor()
 
@@ -81,6 +81,13 @@ class UserDatabase:
         ''', (id_user,))
         return self.cursor.fetchall()
 
+    def get_id_tg_for_notif_distinct(self):
+        self.cursor.execute('''
+        SELECT DISTINCT tg_id_user FROM notif_stream;
+
+        ''')
+        return self.cursor.fetchall()
+
     def get_data_for_notif(self):
         self.cursor.execute('''
         SELECT tg_id_user, name_streamer FROM notif_stream
@@ -146,7 +153,8 @@ if __name__ == '__main__':
         command = input("Введите команду (add, delete, update, get, get_all, \n"
                         "exit, create_table, drop_table, add_permission\n"
                         "get_streamers, add_for_notif, full_request, get_name_streamer, \n"
-                        "get_data_for_notif, delete_streamer, delete_streamer): ")
+                        "get_data_for_notif, delete_streamer, delete_streamer,\n"
+                        "get_id_tg_for_notif_distinct): ")
 
         if command == 'add':
             table_name = input("Введите название таблицы: ")
@@ -229,7 +237,12 @@ if __name__ == '__main__':
             print(db.get_data_for_notif())
 
         elif command == 'delete_streamer':
-            id = (int(input("Введите id записи: ")))
-            print(db.delete_streamer(id))
+            name = (int(input("Введите name_streamer: ")))
+            id = (int(input("Введите id юсера: ")))
+            print(db.delete_streamer(name, id))
+
+        elif command == 'get_id_tg_for_notif_distinct':
+            print(db.get_id_tg_for_notif_distinct())
+
         else:
             print("Неверная команда. Пожалуйста, попробуйте снова.")
