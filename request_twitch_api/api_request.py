@@ -98,7 +98,7 @@ async def check_streamer_life(id_tg, name):
                     status = True
                     streamer_info = info_streamer[0]
                     streamer_name = streamer_info['user_name']
-                    start_time = streamer_info['started_at']  # Сохраняем время начала трансляции
+                    start_time = streamer_info['started_at']
 
                     keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_open_channel(streamer_name)])
                     text = (f"🔴 <b>{streamer_name}</b> запустил трансляцию!\n"
@@ -115,16 +115,15 @@ async def check_streamer_life(id_tg, name):
             else:
                 if status:
                     status = False
-                    # Вычисляем длительность трансляции
                     duration = time_difference_stream(start_time)
                     await bot.send_message(id_tg, f"⚫️ <b>{name}</b> завершил трансляцию.\n"
                                                   f"Трансляция длилась - {duration}", parse_mode='HTML')
-                    start_time = None  # Сбрасываем время начала после завершения трансляции
+                    start_time = None
 
         except requests.exceptions.RequestException as e:
             print(id_tg, f"Ошибка соединения с Twitch API: {e}")
 
-        await asyncio.sleep(5)
+        await asyncio.sleep(10)
 
 
 def time_difference_stream(date_start_stream):
@@ -146,3 +145,43 @@ def get_info_stream(name):
     status = response.status_code
     response_data = response.json()
     return response_data, status
+
+
+def get_streams(name1, name2, name3, name4):
+    url = (f'https://api.twitch.tv/helix/streams/?'
+           f'user_id={get_user_id(name1)}'
+           f'&user_id={get_user_id(name2)}'
+           f'&user_id={get_user_id(name3)}'
+           f'&user_id={get_user_id(name4)}')
+    headers = {
+        'Authorization': 'Bearer 2eawmkloujpadta8wjp0qaiyihggjb',
+        'Client-Id': 'gp762nuuoqcoxypju8c569th9wz7q5'
+    }
+    status = False
+    start_time = None
+    list_streams_life = []
+    list_streams_of = ['a_hyena_dobr', 'eslcs', 'ubica', 'tabula_russia']
+    while True:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        response_data = response.json()
+        now_streams = []
+        if response_data and not status:
+            for i in response_data['data']:
+                if i['user_login'] not in list_streams_life:
+                    list_streams_life.append(i['user_login'])
+                    list_streams_of.remove(i['user_login'])
+                    print(f"Стример {i['user_login']} онлайн")
+                now_streams.append(i['user_login'])
+            print("Cтримы онл", list_streams_life)
+            print("Стримы офл", list_streams_of)
+            diff_stream = list(set(list_streams_life) - set(now_streams))
+            if diff_stream:
+                if diff_stream not in list_streams_of:
+                    list_streams_of.append(diff_stream[0])
+                    list_streams_life.remove(diff_stream[0])
+                    print(f"Стример {diff_stream[0]} завершил трансляцию!")
+        time.sleep(5)
+
+
+get_streams('a_hyena_dobr', 'eslcs', 'ubica', 'tabula_russia')
