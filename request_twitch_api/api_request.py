@@ -5,7 +5,7 @@ import requests
 import random
 from aiogram.types import InlineKeyboardMarkup
 from create_bot import bot
-from keyboards.keyboard_all import keyboard_button_open_channel
+from keyboards.keyboard_all import keyboard_button_open_channel, keyboard_button_delete_massage
 from db_handler.db_class import UserDatabase
 
 
@@ -180,7 +180,8 @@ async def check_streamer_life(id_tg):
                 streamer_info = full_info[name_streamer]
                 streamer_name = streamer_info['user_name']
 
-                keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_open_channel(streamer_name)])
+                keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_open_channel(streamer_name),
+                                                                 keyboard_button_delete_massage()])
                 text = (f"🔴 <b>{streamer_name}</b> запустил трансляцию!\n"
                         f"\n"
                         f"<b>🎮 Категория текущей трансляции:</b> {streamer_info['game_name']}\n"
@@ -193,21 +194,22 @@ async def check_streamer_life(id_tg):
                     caption=text,
                     parse_mode='HTML',
                     reply_markup=keyboard)
-                print(f"Стример {name_streamer} онлайн")
+                print(f"Стример {name_streamer} запустил трансляцию!")
 
         finished_streams = list(set(list_streams_life) - set(now_streams))
 
         for name_streamer in finished_streams:
             list_streams_life.remove(name_streamer)
             duration = time_difference_stream(full_info[name_streamer]['started_at'])
-
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_delete_massage()])
             await bot.send_message(
                 chat_id=id_tg,
                 text=f"⚫️ <b>{name_streamer}</b> завершил трансляцию.\n"
                      f"Трансляция длилась - {duration}",
-                parse_mode='HTML'
+                parse_mode='HTML',
+                reply_markup=keyboard
             )
-            print(f"Стример {name_streamer} завершил трансляцию!")
+            print(f"Стример {name_streamer} завершил трансляцию.")
 
         await asyncio.sleep(15)
 

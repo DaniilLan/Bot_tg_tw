@@ -2,7 +2,7 @@ import sqlite3
 
 
 class UserDatabase:
-    def __init__(self, db_name='C:/Users/landa/PycharmProjects/Bot_tg_twitch/db_handler/tg_auth.db'):
+    def __init__(self, db_name='db_handler/tg_auth.db'):
         self.conn = sqlite3.connect(db_name)
         self.cursor = self.conn.cursor()
 
@@ -39,11 +39,21 @@ class UserDatabase:
         self.conn.commit()
 
     def delete_streamer(self, name_streamer, tg_id_user):
-        name_streamer = name_streamer.lower()
+        # Приводим к нижнему регистру и проверяем тип входных данных
+        if isinstance(name_streamer, (list, set)):
+            name_streamer = [ns.lower() for ns in name_streamer]
+        else:
+            name_streamer = [name_streamer.lower()]
+
         try:
-            self.cursor.execute('''
-            DELETE FROM notif_stream WHERE name_streamer = ? AND tg_id_user = ?
-            ''', (name_streamer, tg_id_user))
+            # Создаем плейсхолдеры для SQL-запроса
+            placeholders = ', '.join(['?'] * len(name_streamer))
+            query = f'''
+            DELETE FROM notif_stream WHERE name_streamer IN ({placeholders}) AND tg_id_user = ?
+            '''
+
+            # Выполняем запрос с параметрами
+            self.cursor.execute(query, (*name_streamer, tg_id_user))
             self.conn.commit()
             return True
         except Exception as e:
@@ -93,6 +103,7 @@ class UserDatabase:
         SELECT tg_id_user, name_streamer FROM notif_stream
         ''')
         return self.cursor.fetchall()
+
 
     def get_all(self, table_name):
         self.cursor.execute(f'SELECT * FROM {table_name}')

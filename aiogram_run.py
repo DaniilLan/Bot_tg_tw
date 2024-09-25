@@ -21,9 +21,9 @@ async def set_commands():
 
 
 def check_start_stream():
-    db = UserDatabase()
-    for i in db.get_id_tg_for_notif_distinct():
-        asyncio.create_task(check_streamer_life(i[0]))
+    # db = UserDatabase()
+    # for i in db.get_id_tg_for_notif_distinct():
+    asyncio.create_task(check_streamer_life(1022548979))
 
 
 async def start_bot():
