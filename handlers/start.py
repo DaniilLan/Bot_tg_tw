@@ -1,16 +1,9 @@
-import asyncio
 import re
 from aiogram import Router, F
-from aiogram.dispatcher import router
 from aiogram.filters import CommandStart
-from aiogram.types import InputMediaPhoto
 from aiogram.utils.chat_action import ChatActionSender
-from create_bot import bot
-from keyboards.keyboard_all import *
 from request_twitch_api.api_request import *
 from requests.exceptions import ConnectionError
-from db_handler.db_class import *
-from functools import wraps
 from wraps import *
 from config import languages_flags
 from db_handler.db_class import UserDatabase
