@@ -62,11 +62,6 @@ def keyboard_button_notif_stream():
     return keyboards
 
 
-def keyboard_button_bac_to_notif_stream():
-    keyboards = [InlineKeyboardButton(text="🔔 Список стримеров", callback_data="notif_stream")]
-    return keyboards
-
-
 def keyboard_button_add_notif():
     keyboards = [InlineKeyboardButton(text="✅ Добавить стримера", callback_data="add_notif_stream")]
     return keyboards

@@ -95,9 +95,8 @@ async def handle_select_streamers(event: CallbackQuery):
                                                             text=f"{name[0]} {'❌' if name[0] in selected_streamers else '✅'}",
                                                             callback_data=f"toggle_select_{name[0]}")] for name in
                                                         list_notif_streamers
-                                                    ] + [keyboard_button_delete_notif()]
-                                                    + [keyboard_button_notif_stream()]
-                                                    + [keyboards_button_bac_to_start()])
+                                                    ] + [keyboard_button_notif_stream()]
+                                                      + [keyboards_button_bac_to_start()])
 
     await event.message.edit_text("<b>Выбери стримеров, которых хочешь удалить.\n\n"
                                   "✅ - оставить в списке уведомлений."
@@ -122,17 +121,24 @@ async def toggle_select_streamer(event: CallbackQuery):
 
     user_selected_streamers[user_id] = selected_streamers
 
-    # Обновляем клавиатуру с текущими состояниями чек-боксов
     list_notif_streamers = db_user.get_name_streamers(user_id)
-
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                                                        [InlineKeyboardButton(
-                                                            text=f"{name[0]} {'❌' if name[0] in selected_streamers else '✅'}",
-                                                            callback_data=f"toggle_select_{name[0]}")] for name in
-                                                        list_notif_streamers
-                                                    ] + [keyboard_button_delete_notif()]
-                                                      + [keyboard_button_bac_to_notif_stream()]
-                                                      + [keyboards_button_bac_to_start()])
+    if not user_selected_streamers[user_id]:
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                                                            [InlineKeyboardButton(
+                                                                text=f"{name[0]} {'❌' if name[0] in selected_streamers else '✅'}",
+                                                                callback_data=f"toggle_select_{name[0]}")] for name in
+                                                            list_notif_streamers
+                                                        ] + [keyboard_button_notif_stream()]
+                                                          + [keyboards_button_bac_to_start()])
+    else:
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                                                            [InlineKeyboardButton(
+                                                                text=f"{name[0]} {'❌' if name[0] in selected_streamers else '✅'}",
+                                                                callback_data=f"toggle_select_{name[0]}")] for name in
+                                                            list_notif_streamers
+                                                        ] + [keyboard_button_delete_notif()]
+                                                          + [keyboard_button_notif_stream()]
+                                                          + [keyboards_button_bac_to_start()])
 
     await event.message.edit_reply_markup(reply_markup=keyboard)
 
@@ -146,7 +152,7 @@ async def handle_select_delete_streamers(event: CallbackQuery):
         name_streamer = user_selected_streamers.get(id_user)
         status_delete = db_user.delete_streamer(name_streamer, id_user)
         if status_delete:
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_bac_to_notif_stream()] +
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_notif_stream()] +
                                                             [keyboards_button_bac_to_start()])
             await event.message.edit_text(text=f"<b>Стримеры:\n\n"
                                                f"➡️{('\n➡️'.join(name_streamer))}\n\n"
@@ -361,7 +367,7 @@ async def handle_message(event: Message):
                 await event.answer(f"Похоже, такого стримера нету или ты накосячил с ник-неймом!",
                                    reply_markup=keyboard)
             else:
-                keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_bac_to_notif_stream(),
+                keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_notif_stream(),
                                                                  keyboards_button_bac_to_start()])
                 add_user = db_user.add_user_for_notif(id_user, name_streamer)
                 if add_user:
