@@ -13,7 +13,7 @@ user_nickname = {}
 user_messages = {}
 user_action = {}
 user_selected_streamers = {}
-db_user = UserDatabase(db_name="db_handler/tg_auth.db")
+db_user = UserDatabase()
 
 
 @start_router.message(CommandStart())
@@ -41,21 +41,56 @@ async def cmd_start(event: Message | CallbackQuery):
 
 
 @start_router.callback_query(F.data == "request_permission")
-@user_permission_required
 async def handle_request_permission(event: CallbackQuery):
     await event.answer()
     user_id = event.from_user.id
     user_login = event.from_user.username
+    chat_id = event.message.chat.id
     check_add = db_user.add_record(user_id, user_login, "request_permission")
     if check_add is False:
-        await event.message.edit_text("Запрос на предоставление доступа уже был отправлен!\n"
+        await event.message.edit_text("Вы уже отправляли запрос!\n"
                                       "Ждите результата обработки.\n"
                                       "Обработка может занять до 24ч⏳")
 
     else:
+        keyboards = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_add_permission(user_login, user_id, chat_id) +
+                                                          keyboard_button_not_add_permission(user_login, user_id, chat_id)])
+        await bot.send_message(1022548979, text=f"Хозяин!"
+                                                f"\n"
+                                                f"❗️@{user_login}/{user_id}❗️ ломится в нашего бота!",
+                               reply_markup=keyboards)
         await event.message.edit_text("Запрос на предоставление доступа был отправлен!\n"
                                       "Ждите результата обработки.\n"
                                       "Обработка может занять до 24ч⏳")
+
+
+@start_router.callback_query(F.data.startswith(f"permission_"))
+async def handle_add_ban_permission(event: CallbackQuery):
+    await event.answer()
+    data = event.data.split(":")
+    user_login = str(data[1])
+    user_id = int(data[2])
+    chat_id = int(data[3])
+    if 'add' in data[0]:
+        result = db_user.add_permission(user_id)
+        if result:
+            keyboard_adm = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_delete_massage()])
+            await event.message.edit_text(f"Пользователь @{user_login}/{user_id} добавлен в базу данных!",
+                                          reply_markup=keyboard_adm)
+            await bot.send_message(user_id, text="Доступ предоставлен!"
+                                                 "\n\n"
+                                                 "Для начала работы отправьте /start"
+                                                 "\n или \n"
+                                                 "Нажмите кнопку меню. \n"
+                                                 "⬇️")
+    elif 'ban' in data[0]:
+        result = db_user.ban_user(user_id)
+        if result:
+            keyboard_adm = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_delete_massage()])
+            await event.message.edit_text(f"Пользователь @{user_login}/{user_id} внесен в бан лист!",
+                                          reply_markup=keyboard_adm)
+            await bot.send_message(user_id, text="⛔️В доступе отказано!⛔️")
+            await bot.ban_chat_member(chat_id=chat_id, user_id=user_id)
 
 
 @start_router.callback_query(F.data == "write_nickname")
@@ -90,7 +125,6 @@ async def handle_select_streamers(event: CallbackQuery):
                                                         list_notif_streamers
                                                     ] + [keyboard_button_notif_stream()]
                                                       + [keyboards_button_bac_to_start()])
-
     await event.message.edit_text("<b>Выбери стримеров, которых хочешь удалить.\n\n"
                                   "✅ - оставить в списке уведомлений."
                                   "\n"
@@ -362,7 +396,7 @@ async def handle_message(event: Message):
             else:
                 keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_notif_stream(),
                                                                  keyboards_button_bac_to_start()])
-                add_user = db_user.add_user_for_notif(id_user, name_streamer)
+                add_user = db_user.add_streamer_for_notif(id_user, name_streamer)
                 if add_user:
                     await event.answer(f"Стример {name_streamer} добавлен в ваши уведомления!", reply_markup=keyboard)
                 else:

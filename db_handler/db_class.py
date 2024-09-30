@@ -2,7 +2,7 @@ import sqlite3
 
 
 class UserDatabase:
-    def __init__(self, db_name='db_handler/tg_auth.db'):
+    def __init__(self, db_name='C:/Users/dlancov/PycharmProjects/Bot_tg_twitch/db_handler/tg_auth.db'):
         self.conn = sqlite3.connect(db_name)
         self.cursor = self.conn.cursor()
 
@@ -32,10 +32,10 @@ class UserDatabase:
         except sqlite3.IntegrityError:
             return False
 
-    def delete_user(self, id_user):
-        self.cursor.execute('''
-        DELETE FROM users WHERE id = ?
-        ''', (id_user,))
+    def delete_user(self,name_table, id_user):
+        self.cursor.execute(f'''
+        DELETE FROM {name_table}  WHERE tg_id_user = {id_user}
+        ''')
         self.conn.commit()
 
     def delete_streamer(self, name_streamer, tg_id_user):
@@ -104,7 +104,6 @@ class UserDatabase:
         ''')
         return self.cursor.fetchall()
 
-
     def get_all(self, table_name):
         self.cursor.execute(f'SELECT * FROM {table_name}')
         return self.cursor.fetchall()
@@ -122,11 +121,11 @@ class UserDatabase:
     def close(self):
         self.conn.close()
 
-    def add_permission(self, id):
+    def add_permission(self, tg_id_user):
         try:
             self.cursor.execute('''
-            SELECT tg_id_user, tg_login FROM request_permission WHERE id = ?
-            ''', (id,))
+            SELECT tg_id_user, tg_login FROM request_permission WHERE tg_id_user = ?
+            ''', (tg_id_user,))
             user = self.cursor.fetchone()
             if user is None:
                 return False
@@ -135,15 +134,16 @@ class UserDatabase:
             INSERT INTO users (tg_id_user, tg_login) VALUES (?, ?)
             ''', (tg_id_user, tg_login))
             self.cursor.execute('''
-            DELETE FROM request_permission WHERE id = ?
-            ''', (id,))
+            DELETE FROM request_permission WHERE tg_id_user = ?
+            ''', (tg_id_user,))
             self.conn.commit()
+            print("Пользователь добавлен!")
             return True
         except Exception as e:
             print(f"Произошла ошибка: {e}")
             return False
 
-    def add_user_for_notif(self, tg_id_user, name_streamer):
+    def add_streamer_for_notif(self, tg_id_user, name_streamer):
         name_streamer = name_streamer.lower()
         sql = '''INSERT INTO notif_stream (tg_id_user, name_streamer) 
                  VALUES (?, ?)'''
@@ -156,6 +156,28 @@ class UserDatabase:
             print(f"Ошибка при добавлении записи: {e}")
             return False
 
+    def ban_user(self, tg_id_user):
+        try:
+            self.cursor.execute('''
+            SELECT tg_id_user, tg_login FROM request_permission WHERE tg_id_user = ?
+            ''', (tg_id_user,))
+            user = self.cursor.fetchone()
+            if user is None:
+                return False
+            tg_id_user, tg_login = user
+            self.cursor.execute('''
+            INSERT INTO user_ban_list (tg_id_user, tg_login) VALUES (?, ?)
+            ''', (tg_id_user, tg_login))
+            self.cursor.execute('''
+            DELETE FROM request_permission WHERE tg_id_user = ?
+            ''', (tg_id_user,))
+            self.conn.commit()
+            print("Пользователь заблокирован!")
+            return True
+        except Exception as e:
+            print(f"Произошла ошибка: {e}")
+            return False
+
 
 if __name__ == '__main__':
     db = UserDatabase()
@@ -165,7 +187,7 @@ if __name__ == '__main__':
                         "exit, create_table, drop_table, add_permission\n"
                         "get_streamers, add_for_notif, full_request, get_name_streamer, \n"
                         "get_data_for_notif, delete_streamer, delete_streamer,\n"
-                        "get_id_tg_for_notif_distinct): ")
+                        "get_id_tg_for_notif_distinct, ban_user): ")
 
         if command == 'add':
             table_name = input("Введите название таблицы: ")
@@ -178,8 +200,9 @@ if __name__ == '__main__':
                 print("Ошибка: Такой пользователь уже есть.")
 
         elif command == 'delete':
+            name_table = str(input("Введите имя таблицы: "))
             id_user = int(input("Введите id пользователя для удаления: "))
-            db.delete_user(id_user)
+            db.delete_user(name_table, id_user)
             print("Пользователь удален.")
 
         elif command == 'update':
@@ -224,7 +247,7 @@ if __name__ == '__main__':
             db.drop_table(table_name)
 
         elif command == 'add_permission':
-            id_record = int(input("Введите id записи таблицы request_permission: "))
+            id_record = int(input("Введите tg_id_user записи таблицы request_permission: "))
             db.add_permission(id_record)
 
         elif command == "full_request":
@@ -234,7 +257,7 @@ if __name__ == '__main__':
         elif command == "add_for_notif":
             tg_id_user = int(input("Введите tg_id_user: "))
             name_streamer = (input("Введите name_streamer: "))
-            db.add_user_for_notif(tg_id_user, name_streamer)
+            db.add_streamer_for_notif(tg_id_user, name_streamer)
 
         elif command == "get_streamers":
             tg_id_user = input("Введите id_tg_user (или all для вывода всех): ")
@@ -248,12 +271,15 @@ if __name__ == '__main__':
             print(db.get_data_for_notif())
 
         elif command == 'delete_streamer':
-            name = (int(input("Введите name_streamer: ")))
+            name = (str(input("Введите name_streamer: ")))
             id = (int(input("Введите id юсера: ")))
             print(db.delete_streamer(name, id))
 
         elif command == 'get_id_tg_for_notif_distinct':
             print(db.get_id_tg_for_notif_distinct())
 
+        elif command == 'ban_user':
+            tg_id_user = int(input("Введите id_tg_user для переноса в бан лист: "))
+            print(db.ban_user(tg_id_user))
         else:
             print("Неверная команда. Пожалуйста, попробуйте снова.")

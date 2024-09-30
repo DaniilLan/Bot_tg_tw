@@ -86,3 +86,17 @@ def keyboard_button_delete_massage():
     keyboards = [InlineKeyboardButton(text="❌ Удалить сообщение", callback_data="delete_massage")]
     return keyboards
 
+
+def keyboard_button_add_permission(user_login, user_id, chat_id):
+    keyboards = [InlineKeyboardButton(text="🔓 Предоставить доступ", callback_data=f"permission_add:{user_login}"
+                                                                                  f":{user_id}"
+                                                                                  f":{chat_id}")]
+    return keyboards
+
+
+def keyboard_button_not_add_permission(user_login, user_id, chat_id):
+    keyboards = [InlineKeyboardButton(text="🔒 Отказать в доступе", callback_data=f"permission_ban:{user_login}"
+                                                                                 f":{user_id}"
+                                                                                 f":{chat_id}")]
+    return keyboards
+
