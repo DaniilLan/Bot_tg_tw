@@ -81,7 +81,7 @@ async def handle_add_ban_permission(event: CallbackQuery):
                                                  "\n\n"
                                                  "Для начала работы отправьте /start"
                                                  "\n или \n"
-                                                 "Нажмите кнопку меню. \n"
+                                                 "Нажмите кнопку меню.\n"
                                                  "⬇️")
     elif 'ban' in data[0]:
         result = db_user.ban_user(user_id)
@@ -90,7 +90,6 @@ async def handle_add_ban_permission(event: CallbackQuery):
             await event.message.edit_text(f"Пользователь @{user_login}/{user_id} внесен в бан лист!",
                                           reply_markup=keyboard_adm)
             await bot.send_message(user_id, text="⛔️В доступе отказано!⛔️")
-            await bot.ban_chat_member(chat_id=chat_id, user_id=user_id)
 
 
 @start_router.callback_query(F.data == "write_nickname")

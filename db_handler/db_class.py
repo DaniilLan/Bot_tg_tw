@@ -2,8 +2,8 @@ import sqlite3
 
 
 class UserDatabase:
-    def __init__(self, db_name='C:/Users/dlancov/PycharmProjects/Bot_tg_twitch/db_handler/tg_auth.db'):
-        self.conn = sqlite3.connect(db_name)
+    def __init__(self):
+        self.conn = sqlite3.connect("C:/Users/landa/PycharmProjects/Bot_tg_twitch/db_handler/tg_auth.db")
         self.cursor = self.conn.cursor()
 
     def create_table(self, name_new_table, column):
@@ -94,7 +94,6 @@ class UserDatabase:
     def get_id_tg_for_notif_distinct(self):
         self.cursor.execute('''
         SELECT DISTINCT tg_id_user FROM notif_stream;
-
         ''')
         return self.cursor.fetchall()
 

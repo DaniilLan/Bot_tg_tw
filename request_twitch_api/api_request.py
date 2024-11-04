@@ -7,6 +7,7 @@ from aiogram.types import InlineKeyboardMarkup
 from create_bot import bot
 from keyboards.keyboard_all import keyboard_button_open_channel, keyboard_button_delete_massage
 from db_handler.db_class import UserDatabase
+from wraps import *
 
 
 def get_user_id(name):
@@ -159,10 +160,9 @@ async def check_streamer_life(id_tg):
         'Authorization': 'Bearer 2eawmkloujpadta8wjp0qaiyihggjb',
         'Client-Id': 'gp762nuuoqcoxypju8c569th9wz7q5'
     }
-
     list_streams_life = []
     full_info = {}
-
+    db_user.close()
     while True:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
@@ -212,5 +212,4 @@ async def check_streamer_life(id_tg):
             print(f"Стример {name_streamer} завершил трансляцию.")
 
         await asyncio.sleep(15)
-
 
