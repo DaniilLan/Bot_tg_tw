@@ -9,7 +9,7 @@ async def check_user(event, user_id=None):
     user_login = event.from_user.username
     tg_user = db_user.get_user(user_id)
     db_user.close()
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_request_permission()]) # callback_data="request_permission"
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_request_permission()])
     print(user_login)
     print(user_id)
     if tg_user is None:

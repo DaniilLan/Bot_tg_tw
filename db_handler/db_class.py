@@ -1,9 +1,8 @@
 import sqlite3
-
-
 class UserDatabase:
     def __init__(self):
-        self.conn = sqlite3.connect("C:/Users/landa/PycharmProjects/Bot_tg_twitch/db_handler/tg_auth.db")
+        self.conn = sqlite3.connect("C:/Users/landa/PycharmProjects/"
+                                    "Bot_tg_twitch/db_handler/tg_auth.db")
         self.cursor = self.conn.cursor()
 
     def create_table(self, name_new_table, column):
@@ -185,7 +184,7 @@ if __name__ == '__main__':
         command = input("Введите команду (add, delete, update, get, get_all, \n"
                         "exit, create_table, drop_table, add_permission\n"
                         "get_streamers, add_for_notif, full_request, get_name_streamer, \n"
-                        "get_data_for_notif, delete_streamer, delete_streamer,\n"
+                        "get_data_for_notif, delete_streamer,\n"
                         "get_id_tg_for_notif_distinct, ban_user): ")
 
         if command == 'add':

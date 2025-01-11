@@ -118,12 +118,12 @@ async def handle_select_streamers(event: CallbackQuery):
     selected_streamers = user_selected_streamers.get(id_user, set())
 
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                                                        [InlineKeyboardButton(
-                                                            text=f"{name[0]} {'❌' if name[0] in selected_streamers else '✅'}",
-                                                            callback_data=f"toggle_select_{name[0]}")] for name in
-                                                        list_notif_streamers
-                                                    ] + [keyboard_button_notif_stream()]
-                                                      + [keyboards_button_bac_to_start()])
+                            [InlineKeyboardButton(
+                                text=f"{name[0]} {'❌' if name[0] in selected_streamers else '✅'}",
+                                callback_data=f"toggle_select_{name[0]}")] for name in
+                            list_notif_streamers
+                        ] + [keyboard_button_notif_stream()]
+                          + [keyboards_button_bac_to_start()])
     await event.message.edit_text("<b>Выбери стримеров, которых хочешь удалить.\n\n"
                                   "✅ - оставить в списке уведомлений."
                                   "\n"

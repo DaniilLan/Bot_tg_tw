@@ -58,7 +58,6 @@ def get_followed(name):
                     list_online[streamer['displayName']] = '🔴'
                 else:
                     list_online[streamer['displayName']] = '⚫️'
-
             sorted_streamers = dict(sorted(list_online.items(), key=lambda item: item[1]))
 
             return sorted_streamers
@@ -169,25 +168,21 @@ async def check_streamer_life(id_tg):
         response_data = response.json()
         info_streamer = response_data['data']
         now_streams = []
-
         for i in info_streamer:
             name_streamer = i['user_login']
             now_streams.append(name_streamer)
-
             if name_streamer not in list_streams_life:
                 list_streams_life.append(name_streamer)
                 full_info[name_streamer] = i
                 streamer_info = full_info[name_streamer]
                 streamer_name = streamer_info['user_name']
-
                 keyboard = InlineKeyboardMarkup(inline_keyboard=[keyboard_button_open_channel(streamer_name),
-                                                                 keyboard_button_delete_massage()])
+                                                             keyboard_button_delete_massage()])
                 text = (f"🔴 <b>{streamer_name}</b> запустил трансляцию!\n"
                         f"\n"
                         f"<b>🎮 Категория текущей трансляции:</b> {streamer_info['game_name']}\n"
                         f"\n"
                         f"<b>📝 Описание текущей трансляции:</b> {streamer_info['title']}\n")
-
                 await bot.send_photo(
                     chat_id=id_tg,
                     photo=get_user_pf(streamer_name),
@@ -195,9 +190,7 @@ async def check_streamer_life(id_tg):
                     parse_mode='HTML',
                     reply_markup=keyboard)
                 print(f"Стример {name_streamer} запустил трансляцию!")
-
         finished_streams = list(set(list_streams_life) - set(now_streams))
-
         for name_streamer in finished_streams:
             list_streams_life.remove(name_streamer)
             duration = time_difference_stream(full_info[name_streamer]['started_at'])
