@@ -13,13 +13,6 @@ async def set_commands():
     await bot.set_my_commands(commands, BotCommandScopeDefault())
 
 
-# def check_start_stream():-------------------------------------------------------------------------old method
-#     db_user = UserDatabase(db_name="db_handler/tg_auth.db")
-#     streamers = db_user.get_data_for_notif()
-#     for i in streamers:
-#         asyncio.create_task(check_streamer_life(i[0], i[1]))
-
-
 def check_start_stream():
     db = UserDatabase()
     for i in db.get_id_tg_for_notif_distinct():

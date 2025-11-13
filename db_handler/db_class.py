@@ -1,8 +1,7 @@
 import sqlite3
 class UserDatabase:
     def __init__(self):
-        self.conn = sqlite3.connect("C:/Users/landa/PycharmProjects/"
-                                    "Bot_tg_twitch/db_handler/tg_auth.db")
+        self.conn = sqlite3.connect("db_handler/tg_auth.db")
         self.cursor = self.conn.cursor()
 
     def create_table(self, name_new_table, column):

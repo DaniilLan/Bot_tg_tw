@@ -1,4 +1,4 @@
-TOKEN = '5355724378:AAHJWzRJoKk0Fa_uYSuABBP1itywYeeak3g'
+TOKEN = '8568837748:AAH1okMZ1xYy0IbkgBiJz6QgOSxvq0I48Is'
 
 languages_flags = {
     'en': '🇬🇧',  # Английский
